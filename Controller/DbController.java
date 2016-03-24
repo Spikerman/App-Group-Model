@@ -9,8 +9,8 @@ import java.sql.DriverManager;
 public class DbController {
     public static final String url = "jdbc:mysql://115.159.100.165/Data";
     public static final String name = "com.mysql.jdbc.Driver";
-    public static final String user = "Spike";
-    public static final String password = "spike950628";
+    public static final String user = "GroupTie";
+    public static final String password = "grouptie123456";
     public Connection connection = null;
 
     public DbController() {
@@ -18,7 +18,7 @@ public class DbController {
             Class.forName(name);
             connection = DriverManager.getConnection(url, user, password);
 
-            //connection testing
+            //connection test
             System.out.println("Connect Success");
         } catch (Exception e) {
             e.printStackTrace();
