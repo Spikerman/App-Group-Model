@@ -16,14 +16,33 @@ public class DataController {
 
     private DbController dbController = new DbController();
     private LinkedList<AppData> dataList = new LinkedList<>();
-    private Map<Date, Set<String>> map = new TreeMap<>();
+
+    private Map<Date, Set<String>> freeUpMap = new TreeMap<>();
+    private Map<Date, Set<String>> paidUpMap = new TreeMap<>();
+    private Map<Date, Set<String>> freeDownMap = new TreeMap<>();
+    private Map<Date, Set<String>> paidDownMap = new TreeMap<>();
+
+    public Map<Date, Set<String>> getFreeUpMap() {
+        return freeUpMap;
+    }
+
+    public Map<Date, Set<String>> getPaidUpMap() {
+        return paidUpMap;
+    }
+
+    public Map<Date, Set<String>> getFreeDownMap() {
+        return freeDownMap;
+    }
+
+    public Map<Date, Set<String>> getPaidDownMap() {
+        return paidDownMap;
+    }
 
     public static void main(String args[]) {
         DataController dataController = new DataController();
         dataController.getDataFromDb().buildMap();
         LinkedList list = dataController.getDataList();
         System.out.println(list.size());
-
     }
 
     public LinkedList<AppData> getDataList() {
@@ -32,7 +51,7 @@ public class DataController {
 
     public DataController getDataFromDb() {
         //String selectSql = "SELECT * FROM Data.AppInfo WHERE( appId='1062817956')";
-        String selectSql = "SELECT * FROM Data.AppInfo";
+        String selectSql = "SELECT * FROM Data.AppInfo Where(rankType in ('topFreeFlowDown','topFreeFlowUp' ,'topPaidFlowDown' ,'topPaidFlowUp'))";
         Statement statement = null;
         ResultSet rs = null;
         try {
@@ -47,9 +66,8 @@ public class DataController {
                 appData.rankType = rs.getString("rankType");
                 appData.ranking = rs.getInt("ranking");
                 appData.rankFloatNum = rs.getInt("rankFloatNum");
-                appData.date = DateFormat.timestampToMonthDayYear(rs.getTimestamp("date"));//?
+                appData.date = DateFormat.timestampToMonthDayYear(rs.getTimestamp("date"));
                 //appData.dateString = rs.getTimestamp("date").toString();
-
                 System.out.println(appData.appId + " " + appData.rankType + " " + appData.ranking + " " + appData.rankFloatNum + " " + appData.date);
                 dataList.add((appData));
             }
@@ -65,15 +83,40 @@ public class DataController {
 
     public DataController buildMap() {
         for (AppData appData : dataList) {
-            if (map.containsKey(appData.date))
-                map.get(appData.date).add(appData.appId);
-            else {
-                Set<String> newSet = new HashSet<>();
-                newSet.add(appData.appId);
-                map.put(appData.date, newSet);
+            if (appData.rankType.equals("topFreeFlowUp")) {
+                if (freeUpMap.containsKey(appData.date))
+                    freeUpMap.get(appData.date).add(appData.appId);
+                else {
+                    Set<String> newSet = new HashSet<>();
+                    newSet.add(appData.appId);
+                    freeUpMap.put(appData.date, newSet);
+                }
+            } else if (appData.rankType.equals("topPaidFlowUp")) {
+                if (paidUpMap.containsKey(appData.date))
+                    paidUpMap.get(appData.date).add(appData.appId);
+                else {
+                    Set<String> newSet = new HashSet<>();
+                    newSet.add(appData.appId);
+                    paidUpMap.put(appData.date, newSet);
+                }
+            } else if (appData.rankType.equals("topFreeFlowDown")) {
+                if (freeDownMap.containsKey(appData.date))
+                    freeDownMap.get(appData.date).add(appData.appId);
+                else {
+                    Set<String> newSet = new HashSet<>();
+                    newSet.add(appData.appId);
+                    freeDownMap.put(appData.date, newSet);
+                }
+            } else {
+                if (paidDownMap.containsKey(appData.date))
+                    paidDownMap.get(appData.date).add(appData.appId);
+                else {
+                    Set<String> newSet = new HashSet<>();
+                    newSet.add(appData.appId);
+                    paidDownMap.put(appData.date, newSet);
+                }
             }
         }
         return this;
     }
-
 }
