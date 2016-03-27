@@ -17,7 +17,6 @@ public class DbController {
         try {
             Class.forName(name);
             connection = DriverManager.getConnection(url, user, password);
-
             //connection test
             System.out.println("Connect Success");
         } catch (Exception e) {
