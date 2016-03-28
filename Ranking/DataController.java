@@ -22,6 +22,11 @@ public class DataController {
     private Map<Date, Set<String>> freeDownMap = new TreeMap<>();
     private Map<Date, Set<String>> paidDownMap = new TreeMap<>();
 
+    public static void main(String args[]) {
+        DataController dataController = new DataController();
+        dataController.getDataFromDb().buildMap();
+    }
+
     public Map<Date, Set<String>> getFreeUpMap() {
         return freeUpMap;
     }
@@ -38,19 +43,13 @@ public class DataController {
         return paidDownMap;
     }
 
-    public static void main(String args[]) {
-        DataController dataController = new DataController();
-        dataController.getDataFromDb().buildMap();
-        LinkedList list = dataController.getDataList();
-        System.out.println(list.size());
-    }
-
     public LinkedList<AppData> getDataList() {
         return dataList;
     }
 
     public DataController getDataFromDb() {
         //String selectSql = "SELECT * FROM Data.AppInfo WHERE( appId='1062817956')";
+
         String selectSql = "SELECT * FROM Data.AppInfo Where(rankType in ('topFreeFlowDown','topFreeFlowUp' ,'topPaidFlowDown' ,'topPaidFlowUp'))";
         Statement statement = null;
         ResultSet rs = null;
