@@ -10,7 +10,9 @@ import java.util.*;
 public class RankingAnalysis {
     private DataController dataController;
     private List<RankingGroup> groupList = new LinkedList<>();
-    ;
+
+    private TreeMap<Date, Set<RankingGroup>> endDayMap = new TreeMap<>();
+    private TreeMap<Date, Set<RankingGroup>> beginDayMap = new TreeMap<>();
 
     public RankingAnalysis(DataController dataController) {
         this.dataController = dataController;
@@ -25,11 +27,13 @@ public class RankingAnalysis {
     }
 
     public void getGroupByRank() {
+
         findUpDownPattern();
         findDownUpPattern();
         findUpUpPattern();
         findDownDownPattern();
-        resultFilter();
+
+        beginEndMapBuilder(beginDayMap, endDayMap);
     }
 
     private Set<String> getIntersectionSet(Set<String> setA, Set<String> setB) {
@@ -40,6 +44,7 @@ public class RankingAnalysis {
         }
         return tmpSet;
     }
+
 
     //return day difference date1-date2
     private int dayDiff(Date date1, Date date2) {
@@ -56,8 +61,8 @@ public class RankingAnalysis {
         return groupList;
     }
 
+    //include same day up and down
     private void findUpDownPattern() {
-
         //free up and down try catch
         Iterator freeDownIter;
         Iterator freeUpIter = dataController.getFreeUpMap().entrySet().iterator();
@@ -107,6 +112,7 @@ public class RankingAnalysis {
         }
     }
 
+    //exclude same day up down
     private void findDownUpPattern() {
         //free down and up try catch
         Iterator freeUpIter;
@@ -139,6 +145,9 @@ public class RankingAnalysis {
             Set<String> downSet = (HashSet) downEntry.getValue();
             Date downDate = (Date) downEntry.getKey();
             paidUpIter = dataController.getPaidUpMap().entrySet().iterator();
+
+            // pass one
+            paidUpIter.next();
             while (paidUpIter.hasNext()) {
                 Map.Entry upEntry = (Map.Entry) paidUpIter.next();
                 Set<String> upSet = (HashSet) upEntry.getValue();
@@ -261,19 +270,104 @@ public class RankingAnalysis {
         }
     }
 
-    public void resultFilter() {
-//        List<RankingGroup> tmpList = new LinkedList<>();
-//        for (int i = 0; i < groupList.size(); i++) {
-//            if (groupList.get(i).dateDiffNum < 0)
-//                tmpList.add(groupList.get(i));
-//        }
-//        groupList.removeAll(tmpList);
-
+    public void beginEndMapBuilder(Map<Date, Set<RankingGroup>> beginDayMap, Map<Date, Set<RankingGroup>> endDayMap) {
+        //remove duplicate data and build tree
         Iterator iterator = groupList.iterator();
         while (iterator.hasNext()) {
             RankingGroup group = (RankingGroup) iterator.next();
-            if (group.dateDiffNum < 0)
+            if (group.dateDiffNum < 0 || ((group.groupType.equals("FreeDownUp") || group.groupType.equals("PaidDownUp")) && group.dateDiffNum == 0)) {
                 iterator.remove();
+            } else {
+
+                if (beginDayMap.containsKey(group.getBeginDate())) {
+                    beginDayMap.get(group.getBeginDate()).add(group);
+                } else {
+                    Set<RankingGroup> newSet = new HashSet<>();
+                    newSet.add(group);
+                    beginDayMap.put(group.getBeginDate(), newSet);
+                }
+
+                if (endDayMap.containsKey(group.getEndDate())) {
+                    endDayMap.get(group.getEndDate()).add(group);
+                } else {
+                    Set<RankingGroup> newSet = new HashSet<>();
+                    newSet.add(group);
+                    endDayMap.put(group.getEndDate(), newSet);
+                }
+            }
+
+
+        }
+
+    }
+
+    public void beginEndMapBuilder(List<RankingGroup> list, Map<Date, Set<RankingGroup>> beginDayMap, Map<Date, Set<RankingGroup>> endDayMap) {
+        //remove duplicate data and build tree
+        if (list.isEmpty())
+            return;
+
+        Iterator iterator = list.iterator();
+        while (iterator.hasNext()) {
+            RankingGroup group = (RankingGroup) iterator.next();
+
+            if (beginDayMap.containsKey(group.getBeginDate())) {
+                beginDayMap.get(group.getBeginDate()).add(group);
+            } else {
+                Set<RankingGroup> newSet = new HashSet<>();
+                newSet.add(group);
+                beginDayMap.put(group.getBeginDate(), newSet);
+            }
+
+            if (endDayMap.containsKey(group.getEndDate())) {
+                endDayMap.get(group.getEndDate()).add(group);
+            } else {
+                Set<RankingGroup> newSet = new HashSet<>();
+                newSet.add(group);
+                endDayMap.put(group.getEndDate(), newSet);
+            }
+        }
+    }
+
+
+    // return the intersection of endGroup and beginGroup, null, if contains nothing
+    private RankingGroup getCombineGroup(RankingGroup endGroup, RankingGroup beginGroup) {
+        RankingGroup mixedGroup = new RankingGroup();
+        Set<String> intersectionSet = getIntersectionSet(endGroup.getAppIdSet(), beginGroup.getAppIdSet());
+
+        if (intersectionSet.isEmpty())
+            return null;
+
+        mixedGroup.setAppIdSet(intersectionSet);
+        mixedGroup.setDate(endGroup.getBeginDate(), beginGroup.getEndDate());
+        mixedGroup.dateDiffNum = endGroup.dateDiffNum + beginGroup.dateDiffNum;
+        return mixedGroup;
+    }
+
+    //combine the group with same end day and begin day
+    private void expandGroup(Map<Date, Set<RankingGroup>> entryBeginDayMap, Map<Date, Set<RankingGroup>> entryEndDayMap) {
+
+        Iterator beginDatIter = this.beginDayMap.entrySet().iterator();
+        Iterator endDatIter = this.endDayMap.entrySet().iterator();
+        while (beginDatIter.hasNext() && endDatIter.hasNext()) {
+            Map.Entry beginEntry = (Map.Entry) beginDatIter.next();
+            Map.Entry endEntry = (Map.Entry) endDatIter.next();
+            Set<RankingGroup> beginGroupSet = (Set) beginEntry.getValue();
+            Set<RankingGroup> endGroupSet = (Set) endEntry.getValue();
+            Object[] beginGroupArray = beginGroupSet.toArray();
+            Object[] endGroupArray = endGroupSet.toArray();
+            List<RankingGroup> tmpGroupList = new LinkedList<>();
+
+            for (int i = 0; i < beginGroupArray.length; i++) {
+                for (int j = i; j < endGroupArray.length; j++) {
+                    RankingGroup beginGroup = (RankingGroup) beginGroupArray[i];
+                    RankingGroup endGroup = (RankingGroup) endGroupArray[j];
+                    RankingGroup mixedGroup = getCombineGroup(endGroup, beginGroup);
+                    if (mixedGroup != null)
+                        tmpGroupList.add(mixedGroup);
+                }
+            }
+
+            beginEndMapBuilder(tmpGroupList, entryBeginDayMap, entryEndDayMap);
         }
     }
 

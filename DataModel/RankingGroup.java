@@ -1,6 +1,7 @@
 package DataModel;
 
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -8,15 +9,30 @@ import java.util.Set;
  */
 public class RankingGroup {
     public int dateDiffNum = 0;
-    public String groupType;
-    private Set<String> appSet;
+    public String groupType = "";
+    private Set<String> appIdSet = new HashSet<>();
     private Date beginDate;
     private Date endDate;
 
-    public RankingGroup(String groupType, int dateDiffNum, Set<String> appSet) {
+    public Date getBeginDate() {
+        return beginDate;
+    }
+
+    public Date getEndDate() {
+        return endDate;
+    }
+
+    public Set<String> getAppIdSet() {
+        return appIdSet;
+    }
+
+    public RankingGroup(String groupType, int dateDiffNum, Set<String> appIdSet) {
         this.groupType = groupType;
         this.dateDiffNum = dateDiffNum;
-        this.appSet = appSet;
+        this.appIdSet = appIdSet;
+    }
+
+    public RankingGroup() {
     }
 
     public void setDateDiffNum(int dateDiffNum) {
@@ -27,8 +43,8 @@ public class RankingGroup {
         this.groupType = groupType;
     }
 
-    public void setAppSet(Set<String> appSet) {
-        this.appSet = appSet;
+    public void setAppIdSet(Set<String> appIdSet) {
+        this.appIdSet = appIdSet;
     }
 
     public void setDate(Date beginDate, Date endDate) {
@@ -37,6 +53,6 @@ public class RankingGroup {
     }
 
     public int getSize() {
-        return appSet.size();
+        return appIdSet.size();
     }
 }
