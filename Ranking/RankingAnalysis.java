@@ -25,7 +25,8 @@ public class RankingAnalysis {
         DataController dataController = new DataController();
         RankingAnalysis rankingAnalysis = new RankingAnalysis(dataController);
         rankingAnalysis.rankGroupMapGenerate();
-        rankingAnalysis.mapRecursiveCombine();
+        double rate = 0.6;
+        rankingAnalysis.mapRecursiveCombine(rate);
         Map<String, RankingGroup> rankingGroupMap = rankingAnalysis.getRankGroupMap();
     }
 
@@ -44,7 +45,7 @@ public class RankingAnalysis {
         expandGroup(beginDayMap, endDayMap);
     }
 
-    private Set<String> getIdIntersectionSet(Set<String> setA, Set<String> setB) {
+    private Set<String> getIntersectionIdSet(Set<String> setA, Set<String> setB) {
         Set<String> tmpSet = new HashSet<>();
         for (String appId : setA) {
             if (setB.contains(appId))
@@ -98,7 +99,7 @@ public class RankingAnalysis {
                 Map.Entry downEntry = (Map.Entry) freeDownIter.next();
                 Set<String> downSet = (HashSet) downEntry.getValue();
                 Date downDate = (Date) downEntry.getKey();
-                Set<String> interSet = getIdIntersectionSet(upSet, downSet);
+                Set<String> interSet = getIntersectionIdSet(upSet, downSet);
                 if (!interSet.isEmpty()) {
                     int dayDiff = dayDiff(downDate, upDate);
                     String groupType = "FreeUpDown";
@@ -122,7 +123,7 @@ public class RankingAnalysis {
                 Map.Entry downEntry = (Map.Entry) paidDownIter.next();
                 Set<String> downSet = (HashSet) downEntry.getValue();
                 Date downDate = (Date) downEntry.getKey();
-                Set<String> interSet = getIdIntersectionSet(upSet, downSet);
+                Set<String> interSet = getIntersectionIdSet(upSet, downSet);
                 if (!interSet.isEmpty()) {
                     int dayDiff = dayDiff(downDate, upDate);
                     String groupType = "PaidUpDown";
@@ -148,7 +149,7 @@ public class RankingAnalysis {
                 Map.Entry upEntry = (Map.Entry) freeUpIter.next();
                 Set<String> upSet = (HashSet) upEntry.getValue();
                 Date upDate = (Date) upEntry.getKey();
-                Set<String> interSet = getIdIntersectionSet(downSet, upSet);
+                Set<String> interSet = getIntersectionIdSet(downSet, upSet);
                 if (!interSet.isEmpty()) {
                     int dayDiff = dayDiff(upDate, downDate);
                     String groupType = "FreeDownUp";
@@ -174,7 +175,7 @@ public class RankingAnalysis {
                 Map.Entry upEntry = (Map.Entry) paidUpIter.next();
                 Set<String> upSet = (HashSet) upEntry.getValue();
                 Date upDate = (Date) upEntry.getKey();
-                Set<String> interSet = getIdIntersectionSet(downSet, upSet);
+                Set<String> interSet = getIntersectionIdSet(downSet, upSet);
                 if (!interSet.isEmpty()) {
                     int dayDiff = dayDiff(upDate, downDate);
                     String groupType = "PaidDownUp";
@@ -202,7 +203,7 @@ public class RankingAnalysis {
                 Map.Entry upNextEntry = (Map.Entry) freeUpNextIter.next();
                 Set<String> upNextSet = (HashSet) upNextEntry.getValue();
                 Date upDateNext = (Date) upNextEntry.getKey();
-                Set<String> interSet = getIdIntersectionSet(upSet, upNextSet);
+                Set<String> interSet = getIntersectionIdSet(upSet, upNextSet);
                 if (!interSet.isEmpty()) {
                     int dayDiff = dayDiff(upDateNext, upDate);
                     String groupType = "FreeUpUp";
@@ -227,7 +228,7 @@ public class RankingAnalysis {
                 Map.Entry upNextEntry = (Map.Entry) paidUpNextIter.next();
                 Set<String> upNextSet = (HashSet) upNextEntry.getValue();
                 Date upDateNext = (Date) upNextEntry.getKey();
-                Set<String> interSet = getIdIntersectionSet(upSet, upNextSet);
+                Set<String> interSet = getIntersectionIdSet(upSet, upNextSet);
                 if (!interSet.isEmpty()) {
                     int dayDiff = dayDiff(upDateNext, upDate);
                     String groupType = "PaidUpUp";
@@ -255,7 +256,7 @@ public class RankingAnalysis {
                 Map.Entry downNextEntry = (Map.Entry) freeDownNextIter.next();
                 Set<String> downNextSet = (HashSet) downNextEntry.getValue();
                 Date downDateNext = (Date) downNextEntry.getKey();
-                Set<String> interSet = getIdIntersectionSet(downSet, downNextSet);
+                Set<String> interSet = getIntersectionIdSet(downSet, downNextSet);
                 if (!interSet.isEmpty()) {
                     int dayDiff = dayDiff(downDateNext, downDate);
                     String groupType = "FreeUpUp";
@@ -280,7 +281,7 @@ public class RankingAnalysis {
                 Map.Entry downNextEntry = (Map.Entry) paidDownNextIter.next();
                 Set<String> downNextSet = (HashSet) downNextEntry.getValue();
                 Date downDateNext = (Date) downNextEntry.getKey();
-                Set<String> interSet = getIdIntersectionSet(downSet, downNextSet);
+                Set<String> interSet = getIntersectionIdSet(downSet, downNextSet);
                 if (!interSet.isEmpty()) {
                     int dayDiff = dayDiff(downDateNext, downDate);
                     String groupType = "PaidDownDown";
@@ -360,7 +361,7 @@ public class RankingAnalysis {
     // return the intersection of endGroup and beginGroup, return null if intersect nothing
     private RankingGroup getCombineGroup(RankingGroup endGroup, RankingGroup beginGroup) {
         RankingGroup mixedGroup = new RankingGroup();
-        Set<String> intersectionSet = getIdIntersectionSet(endGroup.getAppIdSet(), beginGroup.getAppIdSet());
+        Set<String> intersectionSet = getIntersectionIdSet(endGroup.getAppIdSet(), beginGroup.getAppIdSet());
 
         if (intersectionSet.isEmpty())
             return null;
@@ -487,7 +488,7 @@ public class RankingAnalysis {
     }
 
     //combine the generated app rank map, to remove the subset of some entry
-    public void mapRecursiveCombine() {
+    public void mapRecursiveCombine(double rate) {
 
         boolean hasDuplicateSet = false;
         Object[] outerRankGroupArray = rankGroupMap.entrySet().toArray().clone();
@@ -495,6 +496,7 @@ public class RankingAnalysis {
 
         for (int i = 0; i < outerRankGroupArray.length; i++) {
             for (int j = i + 1; j < innerRankGroupArray.length; j++) {
+
                 Map.Entry outerEntry = (Map.Entry) outerRankGroupArray[i];
                 Map.Entry innerEntry = (Map.Entry) innerRankGroupArray[j];
 
@@ -504,24 +506,32 @@ public class RankingAnalysis {
                 RankingGroup outerRankingGroup = (RankingGroup) outerEntry.getValue();
                 RankingGroup innerRankingGroup = (RankingGroup) innerEntry.getValue();
 
-
                 if (outerRankingGroup.getAppSize() > innerRankingGroup.getAppSize()) {
-                    if (outerRankingGroup.getAppIdSet().containsAll(innerRankingGroup.getAppIdSet())) {
+                    if (outerRankingGroup.getAppIdSet().containsAll(innerRankingGroup.getAppIdSet()) || enableCombine(innerRankingGroup.getAppIdSet(), outerRankingGroup.getAppIdSet(), rate)) {
                         rankGroupMap.remove(innerId);
                         hasDuplicateSet = true;
                     }
                 } else {
-                    if (innerRankingGroup.getAppIdSet().containsAll(outerRankingGroup.getAppIdSet())) {
+                    if (innerRankingGroup.getAppIdSet().containsAll(outerRankingGroup.getAppIdSet()) || enableCombine(innerRankingGroup.getAppIdSet(), outerRankingGroup.getAppIdSet(), rate)) {
                         rankGroupMap.remove(outerId);
                         hasDuplicateSet = true;
                     }
                 }
             }
-
-
         }
         if (hasDuplicateSet)
-            mapRecursiveCombine();
+            mapRecursiveCombine(rate);
     }
 
+    private boolean enableCombine(Set<String> setA, Set<String> setB, double rate) {
+        Set<String> unionSet = new HashSet<>();
+        Set<String> intersectionSet = getIntersectionIdSet(setA, setB);
+        unionSet.addAll(setA);
+        unionSet.addAll(setB);
+
+        double unionSize = unionSet.size();
+        double intersectionSize = intersectionSet.size();
+
+        return (intersectionSize / unionSize) >= rate;
+    }
 }
