@@ -10,9 +10,19 @@ import java.util.Set;
 public class RankingGroup {
     public int dateDiffNum = 0;
     public String groupType = "";
+    public Set<Date> commonChangeDateSet = new HashSet<>();
     private Set<String> appIdSet = new HashSet<>();
     private Date beginDate;
     private Date endDate;
+
+    public RankingGroup(String groupType, int dateDiffNum, Set<String> appIdSet) {
+        this.groupType = groupType;
+        this.dateDiffNum = dateDiffNum;
+        this.appIdSet = appIdSet;
+    }
+
+    public RankingGroup() {
+    }
 
     public Date getBeginDate() {
         return beginDate;
@@ -26,13 +36,8 @@ public class RankingGroup {
         return appIdSet;
     }
 
-    public RankingGroup(String groupType, int dateDiffNum, Set<String> appIdSet) {
-        this.groupType = groupType;
-        this.dateDiffNum = dateDiffNum;
+    public void setAppIdSet(Set<String> appIdSet) {
         this.appIdSet = appIdSet;
-    }
-
-    public RankingGroup() {
     }
 
     public void setDateDiffNum(int dateDiffNum) {
@@ -43,10 +48,6 @@ public class RankingGroup {
         this.groupType = groupType;
     }
 
-    public void setAppIdSet(Set<String> appIdSet) {
-        this.appIdSet = appIdSet;
-    }
-
     public void setDate(Date beginDate, Date endDate) {
         this.beginDate = beginDate;
         this.endDate = endDate;
@@ -55,4 +56,10 @@ public class RankingGroup {
     public int getSize() {
         return appIdSet.size();
     }
+
+    public int getCommonDateNum() {
+        return commonChangeDateSet.size();
+    }
+
+
 }

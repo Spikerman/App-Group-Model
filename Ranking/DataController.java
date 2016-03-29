@@ -21,10 +21,15 @@ public class DataController {
     private Map<Date, Set<String>> paidUpMap = new TreeMap<>();
     private Map<Date, Set<String>> freeDownMap = new TreeMap<>();
     private Map<Date, Set<String>> paidDownMap = new TreeMap<>();
+    private Map<String, List<AppData>> appRankMap = new TreeMap<>();
 
     public static void main(String args[]) {
         DataController dataController = new DataController();
-        dataController.getDataFromDb().buildMap();
+        dataController.getAppInfoFromDb().buildDateMap();
+    }
+
+    public Map<String, List<AppData>> getAppRankMap() {
+        return appRankMap;
     }
 
     public Map<Date, Set<String>> getFreeUpMap() {
@@ -47,7 +52,7 @@ public class DataController {
         return dataList;
     }
 
-    public DataController getDataFromDb() {
+    public DataController getAppInfoFromDb() {
         //String selectSql = "SELECT * FROM Data.AppInfo WHERE( appId='1062817956')";
 
         String selectSql = "SELECT * FROM Data.AppInfo Where(rankType in ('topFreeFlowDown','topFreeFlowUp' ,'topPaidFlowDown' ,'topPaidFlowUp'))";
@@ -80,7 +85,8 @@ public class DataController {
         return this;
     }
 
-    public DataController buildMap() {
+
+    public DataController buildDateMap() {
         for (AppData appData : dataList) {
             if (appData.rankType.equals("topFreeFlowUp")) {
                 if (freeUpMap.containsKey(appData.date))
@@ -116,6 +122,28 @@ public class DataController {
                 }
             }
         }
+        return this;
+    }
+
+    public DataController buildAppRankMap() {
+        for (AppData appData : dataList) {
+            if (appRankMap.containsKey(appData.appId)) {
+                appRankMap.get(appData.appId).add(appData);
+            } else {
+                List<AppData> newList = new LinkedList<>();
+                newList.add(appData);
+                appRankMap.put(appData.appId, newList);
+            }
+        }
+
+        Iterator iterator = appRankMap.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry entry = (Map.Entry) iterator.next();
+            List appDataList = (List) entry.getValue();
+            if (appDataList.size() < 3)
+                iterator.remove();
+        }
+
         return this;
     }
 }
