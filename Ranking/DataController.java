@@ -23,6 +23,8 @@ public class DataController {
     private Map<Date, Set<String>> paidDownMap = new TreeMap<>();
     private Map<String, List<AppData>> appRankMap = new TreeMap<>();
 
+    public static final int MIN_NUM=8;
+
     public static void main(String args[]) {
         DataController dataController = new DataController();
         dataController.getAppInfoFromDb().buildDateMap();
@@ -140,7 +142,7 @@ public class DataController {
         while (iterator.hasNext()) {
             Map.Entry entry = (Map.Entry) iterator.next();
             List appDataList = (List) entry.getValue();
-            if (appDataList.size() < 3)
+            if (appDataList.size() < MIN_NUM)
                 iterator.remove();
         }
 

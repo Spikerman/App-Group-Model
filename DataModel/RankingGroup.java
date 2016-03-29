@@ -53,7 +53,7 @@ public class RankingGroup {
         this.endDate = endDate;
     }
 
-    public int getSize() {
+    public int getAppSize() {
         return appIdSet.size();
     }
 
