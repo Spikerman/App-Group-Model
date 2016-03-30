@@ -14,11 +14,13 @@ public class RateAmountAnalysis {
     private DataController dataController;
     private Map<String, List<AppData>> appDataMap = new HashMap<>();
     private Map<String, Set<RateAmountDiffRecord>> diffRecordMap = new HashMap<>();
+    private List<AppData> appDataList;
 
     public RateAmountAnalysis() {
         dataController = new DataController();
         dataController.getAppRatingNumInfoFromDb().buildAppDataMapForRateNum();
         appDataMap = dataController.getAppMapForRateNum();
+        appDataList = dataController.getAppDataListForRateNum();
     }
 
     public static void main(String args[]) {
@@ -51,11 +53,21 @@ public class RateAmountAnalysis {
         for (int i = 0, next = 1; next < list.size() && i < list.size(); next++, i++) {
             RateAmountDiffRecord record = new RateAmountDiffRecord();
             record.amountDiff = list.get(next).userTotalRateCount - list.get(i).userTotalRateCount;
+            if (record.amountDiff < 0) {
+                rateNumDecreaceRecord(appId);
+            }
             record.date = list.get(next).date;
             record.appId = appId;
             set.add(record);
         }
         return set;
+    }
+
+    public void rateNumDecreaceRecord(String appId) {
+        for (AppData app : appDataList) {
+            if (app.appId.equals(appId))
+                app.isRateNumDecrease = true;
+        }
     }
 
     public static class DateComparator implements Comparator<AppData> {

@@ -17,6 +17,7 @@ public class AppData {
     public String currentVersion;
     public int userRateCountForCur;
     public int userTotalRateCount;
+    public boolean isRateNumDecrease = false;
 
     public boolean equals(Object other) {
         if (this == other)
