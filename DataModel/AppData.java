@@ -14,7 +14,9 @@ public class AppData {
     public Date date;
     public String currentVersionReleaseDate;
     public String dateString;
-
+    public String currentVersion;
+    public int userRateCountForCur;
+    public int userTotalRateCount;
 
     public boolean equals(Object other) {
         if (this == other)

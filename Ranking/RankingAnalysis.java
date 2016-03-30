@@ -1,5 +1,6 @@
 package Ranking;
 
+import Controller.DataController;
 import DataModel.AppData;
 import DataModel.RankingGroup;
 
@@ -18,15 +19,24 @@ public class RankingAnalysis {
 
     public RankingAnalysis(DataController dataController) {
         this.dataController = dataController;
-        dataController.getAppInfoFromDb().buildDateMap().buildAppRankMap();
+        dataController.getRankAppInfoFromDb().buildRankPatternDateMap().buildAppDataMapForRank();
     }
 
     public static void main(String args[]) {
         DataController dataController = new DataController();
         RankingAnalysis rankingAnalysis = new RankingAnalysis(dataController);
         rankingAnalysis.rankGroupMapGenerate();
-        double rate = 0.6;
+
+        double rate = 0.5;
+
         rankingAnalysis.mapRecursiveCombine(rate);
+
+        Iterator iterator = rankingAnalysis.getRankGroupMap().entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry entry = (Map.Entry) iterator.next();
+            RankingGroup group = (RankingGroup) entry.getValue();
+            System.out.println(group.getAppSize());
+        }
         Map<String, RankingGroup> rankingGroupMap = rankingAnalysis.getRankGroupMap();
     }
 
@@ -451,7 +461,7 @@ public class RankingAnalysis {
             }
         }
 
-        if (duplicateCount >= DataController.MIN_NUM) {
+        if (duplicateCount >= DataController.RANK_MIN_NUM) {
             if (rankGroupMap.containsKey(outerAppId)) {
                 RankingGroup rankingGroup = rankGroupMap.get(outerAppId);
                 rankingGroup.getAppIdSet().add(innerAppId);
@@ -468,7 +478,7 @@ public class RankingAnalysis {
 
     //generate the rankGroupMap that has appId as key, and RankingGroup as element
     public void rankGroupMapGenerate() {
-        Map appRankMap = dataController.getAppRankMap();
+        Map appRankMap = dataController.getAppMapForRank();
         Object[] outerAppRankArray = appRankMap.entrySet().toArray();
         Object[] innerAppRankArrayB = appRankMap.entrySet().toArray().clone();
 
