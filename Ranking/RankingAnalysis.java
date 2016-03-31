@@ -480,12 +480,12 @@ public class RankingAnalysis {
     public void rankGroupMapGenerate() {
         Map appRankMap = dataController.getAppMapForRank();
         Object[] outerAppRankArray = appRankMap.entrySet().toArray();
-        Object[] innerAppRankArrayB = appRankMap.entrySet().toArray().clone();
+        Object[] innerAppRankArray = appRankMap.entrySet().toArray().clone();
 
         for (int i = 0; i < outerAppRankArray.length; i++) {
-            for (int j = i + 1; j < innerAppRankArrayB.length; j++) {
+            for (int j = i + 1; j < innerAppRankArray.length; j++) {
                 Map.Entry outerEntry = (Map.Entry) outerAppRankArray[i];
-                Map.Entry innerEntry = (Map.Entry) innerAppRankArrayB[j];
+                Map.Entry innerEntry = (Map.Entry) innerAppRankArray[j];
 
                 String outerId = outerEntry.getKey().toString();
                 String innerId = innerEntry.getKey().toString();

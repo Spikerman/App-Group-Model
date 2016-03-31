@@ -2,6 +2,7 @@ package RateAmount;
 
 import Controller.DataController;
 import DataModel.AppData;
+import DataModel.RankingGroup;
 import DataModel.RateAmountDiffRecord;
 
 import java.util.*;
@@ -12,65 +13,125 @@ import java.util.*;
 public class RateAmountAnalysis {
     private DateComparator dateComparator = new DateComparator();
     private DataController dataController;
+
     private Map<String, List<AppData>> appDataMap = new HashMap<>();
-    private Map<String, Set<RateAmountDiffRecord>> diffRecordMap = new HashMap<>();
-    private List<AppData> appDataList;
+    private Map<String, List<RateAmountDiffRecord>> diffRecordMap = new HashMap<>();
+    private Map<String, AppData> appMetaDataMap;
+    private TreeMap<String, RankingGroup> rateNumGroupMap = new TreeMap<>();
 
     public RateAmountAnalysis() {
         dataController = new DataController();
-        dataController.getAppRatingNumInfoFromDb().buildAppDataMapForRateNum();
+        dataController.buildAppDataListForRateNumFromDb().buildAppDataMapForRateNum();
         appDataMap = dataController.getAppMapForRateNum();
-        appDataList = dataController.getAppDataListForRateNum();
+        appMetaDataMap = dataController.getAppMetaDataMapForRateNum();
     }
 
     public static void main(String args[]) {
         RateAmountAnalysis rateAmountAnalysis = new RateAmountAnalysis();
         rateAmountAnalysis.dataController.getAppMapForRateNum();
-//        Set<RateAmountDiffRecord> set = rateAmountAnalysis.generateDiffSet("855000728");
-//        System.out.println(set.size());
         rateAmountAnalysis.buildDiffRecordMap();
+        rateAmountAnalysis.rateNumGroupRankGenerate();
         System.out.println("hehe");
-
     }
 
     //生成评论差值的hash map, key 是app Id, value是存储着每天差值记录rateAmountDiffRecord的集合
-    public void buildDiffRecordMap() {
+    private void buildDiffRecordMap() {
         Iterator iterator = appDataMap.keySet().iterator();
-        Set<RateAmountDiffRecord> set;
+        List<RateAmountDiffRecord> list;
         while (iterator.hasNext()) {
             String appId = iterator.next().toString();
-            set = generateDiffSet(appId);
-            diffRecordMap.put(appId, set);
+            list = generateDiffSet(appId);
+            diffRecordMap.put(appId, list);
         }
     }
 
     //根据输入的app id 值,得到每天评论的差值集合,比如2号-1号,3号-2号...构成的集合
-    public Set<RateAmountDiffRecord> generateDiffSet(String appId) {
-        Set<RateAmountDiffRecord> set = new HashSet<>();
+    private List<RateAmountDiffRecord> generateDiffSet(String appId) {
+        List<RateAmountDiffRecord> diffList = new LinkedList<>();
         List<AppData> list = appDataMap.get(appId);
         Collections.sort(list, dateComparator);
-
+        int totalDiffAmount = 0;
         for (int i = 0, next = 1; next < list.size() && i < list.size(); next++, i++) {
             RateAmountDiffRecord record = new RateAmountDiffRecord();
             record.amountDiff = list.get(next).userTotalRateCount - list.get(i).userTotalRateCount;
+            //若评论数量呈正增长区属,则计入增长总数中
+            //对于评论数量下降的异常情况,考虑苹果删除评论的可能性,则不从已有的累计数量中扣除
+            if (record.amountDiff > 0)
+                totalDiffAmount += record.amountDiff;
+
+            //若评论数为负增长,对相应app的metadata值标记
             if (record.amountDiff < 0) {
-                rateNumDecreaceRecord(appId);
+                recordRateNumDecreace(appId);
             }
             record.date = list.get(next).date;
             record.appId = appId;
-            set.add(record);
+            diffList.add(record);
+            appMetaDataMap.get(appId).averageDailyRateNum = (double) totalDiffAmount / (double) list.size();
         }
-        return set;
+        return diffList;
     }
 
-    public void rateNumDecreaceRecord(String appId) {
-        for (AppData app : appDataList) {
-            if (app.appId.equals(appId))
-                app.isRateNumDecrease = true;
+    //在app data list里找到指定的app,并标记其内的isRateNumDecrease值
+    private void recordRateNumDecreace(String appId) {
+        appMetaDataMap.get(appId).hasNumDecrease = true;
+    }
+
+    public void rateNumGroupRankGenerate() {
+        Object[] outerArray = diffRecordMap.entrySet().toArray();
+        Object[] innerArray = diffRecordMap.entrySet().toArray();
+
+        for (int i = 0; i < outerArray.length; i++) {
+            for (int j = i + 1; j < innerArray.length; j++) {
+                Map.Entry outerEntry = (Map.Entry) outerArray[i];
+                Map.Entry innerEntry = (Map.Entry) innerArray[j];
+
+                String outerId = outerEntry.getKey().toString();
+                String innerId = innerEntry.getKey().toString();
+
+
+                List outerList = (List) outerEntry.getValue();
+                List innerList = (List) innerEntry.getValue();
+
+                System.out.println("id pair: " + outerId + "  " + innerId);
+                rateNumDiffPatternCombine(outerList, outerId, innerList, innerId);
+            }
         }
     }
 
-    public static class DateComparator implements Comparator<AppData> {
+    private void rateNumDiffPatternCombine(List<RateAmountDiffRecord> outerAppList, String outerAppId, List<RateAmountDiffRecord> innerAppList, String innerAppId) {
+
+        double outerAppAvgDiffNum = appMetaDataMap.get(outerAppId).averageDailyRateNum;
+        double innerAppAvgDiffNum = appMetaDataMap.get(innerAppId).averageDailyRateNum;
+
+        int duplicateCount = 0;
+        for (int i = 0; i < outerAppList.size(); i++) {
+            for (int j = i; j < innerAppList.size(); j++) {
+                RateAmountDiffRecord outerDiffRecord = outerAppList.get(i);
+                RateAmountDiffRecord innerDiffRecord = innerAppList.get(j);
+                if (outerDiffRecord.date.equals(innerDiffRecord.date)) {
+                    if ((outerDiffRecord.amountDiff > outerAppAvgDiffNum && innerDiffRecord.amountDiff > innerAppAvgDiffNum)
+                            || (outerDiffRecord.amountDiff < outerAppAvgDiffNum && innerDiffRecord.amountDiff < innerAppAvgDiffNum
+                            && outerDiffRecord.amountDiff > 0 && innerDiffRecord.amountDiff > 0))
+                        duplicateCount++;
+                }
+            }
+
+        }
+        if (duplicateCount >= 3) {
+            System.out.println(duplicateCount);
+            if (rateNumGroupMap.containsKey(outerAppId)) {
+                RankingGroup rankingGroup = rateNumGroupMap.get(outerAppId);
+                rankingGroup.getAppIdSet().add(innerAppId);
+            } else {
+                RankingGroup newGroup = new RankingGroup();
+                newGroup.getAppIdSet().add(outerAppId);
+                newGroup.getAppIdSet().add(innerAppId);
+                rateNumGroupMap.put(outerAppId, newGroup);
+            }
+        }
+    }
+
+    private static class DateComparator implements Comparator<AppData> {
         public int compare(AppData app1, AppData app2) {
             Date date1 = app1.date;
             Date date2 = app2.date;

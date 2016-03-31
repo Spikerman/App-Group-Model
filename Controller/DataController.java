@@ -19,14 +19,15 @@ public class DataController {
     public static final int RATE_NUM_MIN_NUM = 5;
 
     private DbController dbController = new DbController();
-    private List<AppData> appDataListForRank = new LinkedList<>();
-    private List<AppData> appDataListForRateNum = new LinkedList<>();
+    private List<AppData> appDataRecordListForRank = new LinkedList<>();
+    private List<AppData> appDataRecordListForRateNum = new LinkedList<>();
     private Map<Date, Set<String>> freeUpMap = new TreeMap<>();
     private Map<Date, Set<String>> paidUpMap = new TreeMap<>();
     private Map<Date, Set<String>> freeDownMap = new TreeMap<>();
     private Map<Date, Set<String>> paidDownMap = new TreeMap<>();
     private Map<String, List<AppData>> appMapForRank = new TreeMap<>();
     private Map<String, List<AppData>> appMapForRateNum = new TreeMap<>();
+    private Map<String, AppData> appMetaDataMapForRateNum = new HashMap<>();
 
     public DataController() {
         //initial the rank query statement
@@ -35,17 +36,20 @@ public class DataController {
 
     public static void main(String args[]) {
         DataController dataController = new DataController();
-        //dataController.getRankAppInfoFromDb().buildRankPatternDateMap();
         List<AppData> tmpList = dataController.getAppRatingNumRecordFromDb("855000728");
         System.out.print(tmpList.size());
+    }
+
+    public Map<String, AppData> getAppMetaDataMapForRateNum() {
+        return appMetaDataMapForRateNum;
     }
 
     public Map<String, List<AppData>> getAppMapForRateNum() {
         return appMapForRateNum;
     }
 
-    public List<AppData> getAppDataListForRateNum() {
-        return appDataListForRateNum;
+    public List<AppData> getAppDataRecordListForRateNum() {
+        return appDataRecordListForRateNum;
     }
 
     public Map<String, List<AppData>> getAppMapForRank() {
@@ -68,8 +72,8 @@ public class DataController {
         return paidDownMap;
     }
 
-    public List<AppData> getAppDataListForRank() {
-        return appDataListForRank;
+    public List<AppData> getAppDataRecordListForRank() {
+        return appDataRecordListForRank;
     }
 
     public DataController getRankAppInfoFromDb() {
@@ -92,7 +96,7 @@ public class DataController {
                 appData.rankFloatNum = rs.getInt("rankFloatNum");
                 appData.date = DateFormat.timestampToMonthDayYear(rs.getTimestamp("date"));
                 System.out.println(appData.appId + " " + appData.rankType + " " + appData.ranking + " " + appData.rankFloatNum + " " + appData.date);
-                appDataListForRank.add((appData));
+                appDataRecordListForRank.add((appData));
             }
 
         } catch (SQLException e) {
@@ -129,7 +133,7 @@ public class DataController {
     }
 
     //generate appData List for rank num analysis
-    public DataController getAppRatingNumInfoFromDb() {
+    public DataController buildAppDataListForRateNumFromDb() {
         String selectSql = "SELECT * FROM Data.AppInfo Where rankType ='update'";
         ResultSet rs;
         Statement statement;
@@ -148,13 +152,22 @@ public class DataController {
                 appData.userRateCountForCur = rs.getInt("userRatingCountForCurrentVersion");
                 appData.userTotalRateCount = rs.getInt("userRatingCount");
                 appData.date = DateFormat.timestampToMonthDayYear(rs.getTimestamp("date"));
-                appDataListForRateNum.add(appData);
+                appDataRecordListForRateNum.add(appData);
+                addMetaDataToApp(appData.appId);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
         return this;
+    }
+
+    public void addMetaDataToApp(String appId) {
+        if (!appMetaDataMapForRateNum.containsKey(appId)) {
+            AppData appData = new AppData();
+            appData.appId = appId;
+            appMetaDataMapForRateNum.put(appId, appData);
+        }
     }
 
     public List<String> getAllAppIdFromDb() {
@@ -181,7 +194,7 @@ public class DataController {
 
 
     public DataController buildRankPatternDateMap() {
-        for (AppData appData : appDataListForRank) {
+        for (AppData appData : appDataRecordListForRank) {
             if (appData.rankType.equals("topFreeFlowUp")) {
                 if (freeUpMap.containsKey(appData.date))
                     freeUpMap.get(appData.date).add(appData.appId);
@@ -222,7 +235,7 @@ public class DataController {
 
     //build app map according to the app data list that fetch from the database
     public DataController buildAppDataMapForRank() {
-        for (AppData appData : appDataListForRank) {
+        for (AppData appData : appDataRecordListForRank) {
             if (appMapForRank.containsKey(appData.appId)) {
                 appMapForRank.get(appData.appId).add(appData);
             } else {
@@ -243,8 +256,9 @@ public class DataController {
         return this;
     }
 
+    //构建评论数量变化检测的的HashMap,key值为app id, value值为该app在数据库中的所有记录
     public DataController buildAppDataMapForRateNum() {
-        for (AppData appData : appDataListForRateNum) {
+        for (AppData appData : appDataRecordListForRateNum) {
             if (appMapForRateNum.containsKey(appData.appId)) {
                 appMapForRateNum.get(appData.appId).add(appData);
             } else {
@@ -258,9 +272,14 @@ public class DataController {
         Iterator iterator = appMapForRateNum.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry entry = (Map.Entry) iterator.next();
+            String appId = (String) entry.getKey();
+
             List appDataList = (List) entry.getValue();
-            if (appDataList.size() < RATE_NUM_MIN_NUM)
+            if (appDataList.size() < RATE_NUM_MIN_NUM) {
                 iterator.remove();
+                appMetaDataMapForRateNum.remove(appId);
+
+            }
         }
 
         return this;
