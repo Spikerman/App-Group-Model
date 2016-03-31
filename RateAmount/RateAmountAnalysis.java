@@ -4,6 +4,7 @@ import Controller.DataController;
 import DataModel.AppData;
 import DataModel.RankingGroup;
 import DataModel.RateAmountDiffRecord;
+import ToolKit.Combination;
 
 import java.util.*;
 
@@ -11,13 +12,12 @@ import java.util.*;
  * Created by chenhao on 3/30/16.
  */
 public class RateAmountAnalysis {
+    public TreeMap<String, RankingGroup> rateNumGroupMap = new TreeMap<>();
     private DateComparator dateComparator = new DateComparator();
     private DataController dataController;
-
     private Map<String, List<AppData>> appDataMap = new HashMap<>();
     private Map<String, List<RateAmountDiffRecord>> diffRecordMap = new HashMap<>();
     private Map<String, AppData> appMetaDataMap;
-    private TreeMap<String, RankingGroup> rateNumGroupMap = new TreeMap<>();
 
     public RateAmountAnalysis() {
         dataController = new DataController();
@@ -30,8 +30,8 @@ public class RateAmountAnalysis {
         RateAmountAnalysis rateAmountAnalysis = new RateAmountAnalysis();
         rateAmountAnalysis.dataController.getAppMapForRateNum();
         rateAmountAnalysis.buildDiffRecordMap();
-        rateAmountAnalysis.rateNumGroupRankGenerate();
-        System.out.println("hehe");
+        rateAmountAnalysis.quickRateNumGroupRankGenerate();
+        System.out.println(rateAmountAnalysis.rateNumGroupMap.size());
     }
 
     //生成评论差值的hash map, key 是app Id, value是存储着每天差值记录rateAmountDiffRecord的集合
@@ -77,25 +77,50 @@ public class RateAmountAnalysis {
     }
 
     public void rateNumGroupRankGenerate() {
+
         Object[] outerArray = diffRecordMap.entrySet().toArray();
         Object[] innerArray = diffRecordMap.entrySet().toArray();
-
         for (int i = 0; i < outerArray.length; i++) {
             for (int j = i + 1; j < innerArray.length; j++) {
+
                 Map.Entry outerEntry = (Map.Entry) outerArray[i];
                 Map.Entry innerEntry = (Map.Entry) innerArray[j];
 
                 String outerId = outerEntry.getKey().toString();
                 String innerId = innerEntry.getKey().toString();
 
-
                 List outerList = (List) outerEntry.getValue();
                 List innerList = (List) innerEntry.getValue();
 
                 System.out.println("id pair: " + outerId + "  " + innerId);
                 rateNumDiffPatternCombine(outerList, outerId, innerList, innerId);
+
             }
         }
+    }
+
+    public void quickRateNumGroupRankGenerate() {
+        Object[] keyArray = diffRecordMap.keySet().toArray();
+        int[] num = new int[keyArray.length];
+        for (int i = 0; i < keyArray.length; i++) {
+            num[i] = i;
+        }
+        List<int[]> keyPair = Combination.combine(num, 2);
+        for (int i = 0; i < keyPair.size(); i++) {
+            int[] x = keyPair.get(i);
+            String appId1 = keyArray[x[0]].toString();
+            String appId2 = keyArray[x[1]].toString();
+            System.out.println(i);
+            rateNumDiffPatternCombine(diffRecordMap.get(appId1), appId1, diffRecordMap.get(appId2), appId2);
+        }
+//
+    }
+
+    private int[] getSubset(int[] input, int[] subset) {
+        int[] result = new int[subset.length];
+        for (int i = 0; i < subset.length; i++)
+            result[i] = input[subset[i]];
+        return result;
     }
 
     private void rateNumDiffPatternCombine(List<RateAmountDiffRecord> outerAppList, String outerAppId, List<RateAmountDiffRecord> innerAppList, String innerAppId) {
@@ -117,7 +142,7 @@ public class RateAmountAnalysis {
             }
 
         }
-        if (duplicateCount >= 3) {
+        if (duplicateCount >= DataController.RATE_NUM_MIN_NUM) {
             System.out.println(duplicateCount);
             if (rateNumGroupMap.containsKey(outerAppId)) {
                 RankingGroup rankingGroup = rateNumGroupMap.get(outerAppId);
