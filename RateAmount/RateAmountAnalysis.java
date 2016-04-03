@@ -54,15 +54,29 @@ public class RateAmountAnalysis {
         System.out.println("合并后Group数" + rateAmountAnalysis.rateNumGroupMap.size());
 
         System.out.println("----------------------------------------------");
-        Map map = rateAmountAnalysis.rateNumGroupMap;
-        Set set = map.entrySet();
+
+//        Map map = rateAmountAnalysis.rateNumGroupMap;
+//        Set set = map.entrySet();
+//        Iterator iterator = set.iterator();
+//        while (iterator.hasNext()) {
+//            Map.Entry entry = (Map.Entry) iterator.next();
+//            RankingGroup group = (RankingGroup) entry.getValue();
+//            System.out.println(group.getAppSize());
+//        }
+
+        Map metaMap = rateAmountAnalysis.appMetaDataMap;
+        Set set = metaMap.entrySet();
         Iterator iterator = set.iterator();
+        int count = 0;
         while (iterator.hasNext()) {
             Map.Entry entry = (Map.Entry) iterator.next();
-            RankingGroup group = (RankingGroup) entry.getValue();
-            System.out.println(group.getAppSize());
+            AppData appData = (AppData) entry.getValue();
+            if (appData.hasNumDecrease)
+                count++;
         }
-        System.out.println("---------------------------------------------");
+
+        System.out.println("app数" + set.size());
+        System.out.println("评论减少app数" + count);
     }
 
     //生成评论差值的hash map, key 是app Id, value是存储着每天差值记录rateAmountDiffRecord的集合

@@ -16,7 +16,7 @@ public class DataController {
     public static final int RANK_MIN_NUM = 8;
 
     //APP被持续监测的最少天数
-    public static final int RATE_NUM_MIN_NUM = 21;
+    public static final int RATE_NUM_MIN_NUM = 20;
 
     private DbController dbController = new DbController();
     private List<AppData> appDataRecordListForRank = new LinkedList<>();
