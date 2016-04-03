@@ -28,9 +28,11 @@ public class RankingAnalysis {
         RankingAnalysis rankingAnalysis = new RankingAnalysis(dataController);
         rankingAnalysis.rankGroupMapGenerate();
 
+        System.out.println("合并前Group数: " + rankingAnalysis.rankGroupMap.size());
         double rate = 0.8;
-
         rankingAnalysis.mapRecursiveCombine(rate);
+
+        System.out.println("合并后Group数: " + rankingAnalysis.rankGroupMap.size());
 
         Iterator iterator = rankingAnalysis.getRankGroupMap().entrySet().iterator();
         while (iterator.hasNext()) {
@@ -520,6 +522,7 @@ public class RankingAnalysis {
                 int innerGroupSize = innerRankingGroup.getAppSize();
 
                 if (outerRankingGroup.getAppIdSet().containsAll(innerRankingGroup.getAppIdSet())
+                        || innerRankingGroup.getAppIdSet().containsAll(outerRankingGroup.getAppIdSet())
                         || enableCombine(innerRankingGroup.getAppIdSet(), outerRankingGroup.getAppIdSet(), rate)) {
                     if (outerGroupSize > innerGroupSize)
                         rankGroupMap.remove(innerId);

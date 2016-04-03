@@ -47,7 +47,7 @@ public class RateAmountAnalysis {
 
         System.out.println("合并前Group数: " + rateAmountAnalysis.rateNumGroupMap.size());
 
-        double rate = 0.4;
+        double rate = 0.8;
 
         rateAmountAnalysis.mapRecursiveCombine(rate);
 
@@ -82,9 +82,10 @@ public class RateAmountAnalysis {
         List<AppData> list = appDataMap.get(appId);
         Collections.sort(list, dateComparator);
         int totalDiffAmount = 0;
-        for (int i = 0, next = 1; next < list.size() && i < list.size(); next++, i++) {
+        for (int current = 0, next = 1; next < list.size() && current < list.size(); next++, current++) {
             RateAmountDiffRecord record = new RateAmountDiffRecord();
-            record.amountDiff = list.get(next).userTotalRateCount - list.get(i).userTotalRateCount;
+            record.amountDiff = list.get(next).userTotalRateCount - list.get(current).userTotalRateCount;
+
             //若评论数量呈正增长区属,则计入增长总数中
             //对于评论数量下降的异常情况,考虑苹果删除评论的可能性,则不从已有的累计数量中扣除
             if (record.amountDiff > 0)
@@ -255,6 +256,7 @@ public class RateAmountAnalysis {
                 int innerGroupSize = innerRankingGroup.getAppSize();
 
                 if (outerRankingGroup.getAppIdSet().containsAll(innerRankingGroup.getAppIdSet())
+                        || innerRankingGroup.getAppIdSet().containsAll(outerRankingGroup.getAppIdSet())
                         || enableCombine(innerRankingGroup.getAppIdSet(), outerRankingGroup.getAppIdSet(), rate)) {
 
                     if (outerGroupSize > innerGroupSize)
