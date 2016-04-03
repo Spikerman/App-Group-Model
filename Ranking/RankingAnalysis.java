@@ -3,6 +3,7 @@ package Ranking;
 import Controller.DataController;
 import DataModel.AppData;
 import DataModel.RankingGroup;
+import com.google.common.collect.Sets;
 
 import java.util.*;
 
@@ -19,7 +20,7 @@ public class RankingAnalysis {
 
     public RankingAnalysis(DataController dataController) {
         this.dataController = dataController;
-        dataController.getRankAppInfoFromDb().buildRankPatternDateMap().buildAppDataMapForRank();
+        dataController.getRankAppInfoFromDb().buildAppDataMapForRank();
     }
 
     public static void main(String args[]) {
@@ -27,7 +28,7 @@ public class RankingAnalysis {
         RankingAnalysis rankingAnalysis = new RankingAnalysis(dataController);
         rankingAnalysis.rankGroupMapGenerate();
 
-        double rate = 0.5;
+        double rate = 0.8;
 
         rankingAnalysis.mapRecursiveCombine(rate);
 
@@ -37,7 +38,6 @@ public class RankingAnalysis {
             RankingGroup group = (RankingGroup) entry.getValue();
             System.out.println(group.getAppSize());
         }
-        Map<String, RankingGroup> rankingGroupMap = rankingAnalysis.getRankGroupMap();
     }
 
     public TreeMap<String, RankingGroup> getRankGroupMap() {
@@ -516,16 +516,16 @@ public class RankingAnalysis {
                 RankingGroup outerRankingGroup = (RankingGroup) outerEntry.getValue();
                 RankingGroup innerRankingGroup = (RankingGroup) innerEntry.getValue();
 
-                if (outerRankingGroup.getAppSize() > innerRankingGroup.getAppSize()) {
-                    if (outerRankingGroup.getAppIdSet().containsAll(innerRankingGroup.getAppIdSet()) || enableCombine(innerRankingGroup.getAppIdSet(), outerRankingGroup.getAppIdSet(), rate)) {
+                int outerGroupSize = outerRankingGroup.getAppSize();
+                int innerGroupSize = innerRankingGroup.getAppSize();
+
+                if (outerRankingGroup.getAppIdSet().containsAll(innerRankingGroup.getAppIdSet())
+                        || enableCombine(innerRankingGroup.getAppIdSet(), outerRankingGroup.getAppIdSet(), rate)) {
+                    if (outerGroupSize > innerGroupSize)
                         rankGroupMap.remove(innerId);
-                        hasDuplicateSet = true;
-                    }
-                } else {
-                    if (innerRankingGroup.getAppIdSet().containsAll(outerRankingGroup.getAppIdSet()) || enableCombine(innerRankingGroup.getAppIdSet(), outerRankingGroup.getAppIdSet(), rate)) {
+                    else
                         rankGroupMap.remove(outerId);
-                        hasDuplicateSet = true;
-                    }
+                    hasDuplicateSet = true;
                 }
             }
         }
@@ -534,14 +534,10 @@ public class RankingAnalysis {
     }
 
     private boolean enableCombine(Set<String> setA, Set<String> setB, double rate) {
-        Set<String> unionSet = new HashSet<>();
-        Set<String> intersectionSet = getIntersectionIdSet(setA, setB);
-        unionSet.addAll(setA);
-        unionSet.addAll(setB);
-
+        Set<String> unionSet = Sets.union(setA, setB);
+        Set<String> intersectionSet = Sets.intersection(setA, setB);
         double unionSize = unionSet.size();
         double intersectionSize = intersectionSet.size();
-
         return (intersectionSize / unionSize) >= rate;
     }
 }

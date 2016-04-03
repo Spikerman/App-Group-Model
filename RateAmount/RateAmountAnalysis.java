@@ -5,18 +5,27 @@ import DataModel.AppData;
 import DataModel.RankingGroup;
 import DataModel.RateAmountDiffRecord;
 import ToolKit.Combination;
+import com.google.common.collect.Sets;
 
 import java.util.*;
+
 
 /**
  * Created by chenhao on 3/30/16.
  */
+
 public class RateAmountAnalysis {
-    public TreeMap<String, RankingGroup> rateNumGroupMap = new TreeMap<>();
+    public Map<String, RankingGroup> rateNumGroupMap = new HashMap<>();
     private DateComparator dateComparator = new DateComparator();
     private DataController dataController;
+    //对diffRecordMap数据结构做出修改,改为
+    //Map<String, TreeMap<Date,RateAmountDiffRecord>>
+    //在进入比较之后, 任意两个APP 的日期记录比较,通过TreeMap的轮训记录进行,而不是穷举
+    //取出TreeMap的每天的所有Key值,然后取交集,得到单一Key值
+    //或者去元素含量小的一组Key值进行循环遍历
     private Map<String, List<AppData>> appDataMap = new HashMap<>();
-    private Map<String, List<RateAmountDiffRecord>> diffRecordMap = new HashMap<>();
+    private Map<String, HashMap<Date, RateAmountDiffRecord>> diffRecordMap = new HashMap<>();
+    //private Map<String, List<RateAmountDiffRecord>> diffRecordMap = new HashMap<>();
     private Map<String, AppData> appMetaDataMap;
 
     public RateAmountAnalysis() {
@@ -30,24 +39,46 @@ public class RateAmountAnalysis {
         RateAmountAnalysis rateAmountAnalysis = new RateAmountAnalysis();
         rateAmountAnalysis.dataController.getAppMapForRateNum();
         rateAmountAnalysis.buildDiffRecordMap();
-        rateAmountAnalysis.quickRateNumGroupRankGenerate();
-        System.out.println(rateAmountAnalysis.rateNumGroupMap.size());
+
+        rateAmountAnalysis.rateNumGroupRankGenerate();
+
+        System.out.println("----------------------------------------------");
+
+
+        System.out.println("合并前Group数: " + rateAmountAnalysis.rateNumGroupMap.size());
+
+        double rate = 0.4;
+
+        rateAmountAnalysis.mapRecursiveCombine(rate);
+
+        System.out.println("合并后Group数" + rateAmountAnalysis.rateNumGroupMap.size());
+
+        System.out.println("----------------------------------------------");
+        Map map = rateAmountAnalysis.rateNumGroupMap;
+        Set set = map.entrySet();
+        Iterator iterator = set.iterator();
+        while (iterator.hasNext()) {
+            Map.Entry entry = (Map.Entry) iterator.next();
+            RankingGroup group = (RankingGroup) entry.getValue();
+            System.out.println(group.getAppSize());
+        }
+        System.out.println("---------------------------------------------");
     }
 
     //生成评论差值的hash map, key 是app Id, value是存储着每天差值记录rateAmountDiffRecord的集合
     private void buildDiffRecordMap() {
         Iterator iterator = appDataMap.keySet().iterator();
-        List<RateAmountDiffRecord> list;
+        HashMap<Date, RateAmountDiffRecord> map;
         while (iterator.hasNext()) {
             String appId = iterator.next().toString();
-            list = generateDiffSet(appId);
-            diffRecordMap.put(appId, list);
+            map = generateDiffSet(appId);
+            diffRecordMap.put(appId, map);
         }
     }
 
     //根据输入的app id 值,得到每天评论的差值集合,比如2号-1号,3号-2号...构成的集合
-    private List<RateAmountDiffRecord> generateDiffSet(String appId) {
-        List<RateAmountDiffRecord> diffList = new LinkedList<>();
+    private HashMap<Date, RateAmountDiffRecord> generateDiffSet(String appId) {
+        HashMap<Date, RateAmountDiffRecord> diffMap = new HashMap<>();
         List<AppData> list = appDataMap.get(appId);
         Collections.sort(list, dateComparator);
         int totalDiffAmount = 0;
@@ -61,18 +92,21 @@ public class RateAmountAnalysis {
 
             //若评论数为负增长,对相应app的metadata值标记
             if (record.amountDiff < 0) {
-                recordRateNumDecreace(appId);
+                recordRateNumDecrease(appId);
             }
             record.date = list.get(next).date;
             record.appId = appId;
-            diffList.add(record);
-            appMetaDataMap.get(appId).averageDailyRateNum = (double) totalDiffAmount / (double) list.size();
+            diffMap.put(record.date, record);
         }
-        return diffList;
+
+        double avgNum = (double) totalDiffAmount / (double) list.size();
+
+        appMetaDataMap.get(appId).averageDailyRateNum = avgNum;
+        return diffMap;
     }
 
     //在app data list里找到指定的app,并标记其内的isRateNumDecrease值
-    private void recordRateNumDecreace(String appId) {
+    private void recordRateNumDecrease(String appId) {
         appMetaDataMap.get(appId).hasNumDecrease = true;
     }
 
@@ -80,6 +114,7 @@ public class RateAmountAnalysis {
 
         Object[] outerArray = diffRecordMap.entrySet().toArray();
         Object[] innerArray = diffRecordMap.entrySet().toArray();
+
         for (int i = 0; i < outerArray.length; i++) {
             for (int j = i + 1; j < innerArray.length; j++) {
 
@@ -89,11 +124,12 @@ public class RateAmountAnalysis {
                 String outerId = outerEntry.getKey().toString();
                 String innerId = innerEntry.getKey().toString();
 
-                List outerList = (List) outerEntry.getValue();
-                List innerList = (List) innerEntry.getValue();
+                HashMap outerMap = (HashMap) outerEntry.getValue();
+                HashMap innerMap = (HashMap) innerEntry.getValue();
 
                 System.out.println("id pair: " + outerId + "  " + innerId);
-                rateNumDiffPatternCombine(outerList, outerId, innerList, innerId);
+
+                quickRateNumDiffPatternCombine(outerMap, outerId, innerMap, innerId);
 
             }
         }
@@ -111,7 +147,7 @@ public class RateAmountAnalysis {
             String appId1 = keyArray[x[0]].toString();
             String appId2 = keyArray[x[1]].toString();
             System.out.println(i);
-            rateNumDiffPatternCombine(diffRecordMap.get(appId1), appId1, diffRecordMap.get(appId2), appId2);
+            //rateNumDiffPatternCombine(diffRecordMap.get(appId1), appId1, diffRecordMap.get(appId2), appId2);
         }
 //
     }
@@ -123,7 +159,9 @@ public class RateAmountAnalysis {
         return result;
     }
 
+    //此处做出修改
     private void rateNumDiffPatternCombine(List<RateAmountDiffRecord> outerAppList, String outerAppId, List<RateAmountDiffRecord> innerAppList, String innerAppId) {
+
 
         double outerAppAvgDiffNum = appMetaDataMap.get(outerAppId).averageDailyRateNum;
         double innerAppAvgDiffNum = appMetaDataMap.get(innerAppId).averageDailyRateNum;
@@ -140,9 +178,8 @@ public class RateAmountAnalysis {
                         duplicateCount++;
                 }
             }
-
         }
-        if (duplicateCount >= DataController.RATE_NUM_MIN_NUM) {
+        if (duplicateCount >= 10) {
             System.out.println(duplicateCount);
             if (rateNumGroupMap.containsKey(outerAppId)) {
                 RankingGroup rankingGroup = rateNumGroupMap.get(outerAppId);
@@ -154,6 +191,92 @@ public class RateAmountAnalysis {
                 rateNumGroupMap.put(outerAppId, newGroup);
             }
         }
+    }
+
+    private void quickRateNumDiffPatternCombine(
+            HashMap<Date, RateAmountDiffRecord> outerMap, String outerAppId,
+            HashMap<Date, RateAmountDiffRecord> innerMap, String innerAppId) {
+        double outerAppAvgDiffNum = appMetaDataMap.get(outerAppId).averageDailyRateNum;
+        double innerAppAvgDiffNum = appMetaDataMap.get(innerAppId).averageDailyRateNum;
+        Set<Date> outerDateSet = outerMap.keySet();
+        Set<Date> innerDateSet = innerMap.keySet();
+
+        Set<Date> shareDateSet = (Set) Sets.intersection(outerDateSet, innerDateSet);
+
+        //取两个set的日期的交集
+        outerDateSet.retainAll(innerDateSet);
+        shareDateSet = outerDateSet;
+
+        int duplicateCount = 0;
+        for (Date date : shareDateSet) {
+            RateAmountDiffRecord outerDiffRecord = outerMap.get(date);
+            RateAmountDiffRecord innerDiffRecord = innerMap.get(date);
+
+            if ((outerDiffRecord.amountDiff > outerAppAvgDiffNum && innerDiffRecord.amountDiff > innerAppAvgDiffNum)
+                    || (outerDiffRecord.amountDiff < outerAppAvgDiffNum && innerDiffRecord.amountDiff < innerAppAvgDiffNum
+                    && outerDiffRecord.amountDiff > 0 && innerDiffRecord.amountDiff > 0))
+                duplicateCount++;
+        }
+
+
+        if (duplicateCount >= 12) {
+            System.out.println(duplicateCount);
+            if (rateNumGroupMap.containsKey(outerAppId)) {
+                RankingGroup rankingGroup = rateNumGroupMap.get(outerAppId);
+                rankingGroup.getAppIdSet().add(innerAppId);
+            } else {
+                RankingGroup newGroup = new RankingGroup();
+                newGroup.getAppIdSet().add(outerAppId);
+                newGroup.getAppIdSet().add(innerAppId);
+                rateNumGroupMap.put(outerAppId, newGroup);
+            }
+        }
+    }
+
+    public void mapRecursiveCombine(double rate) {
+
+        boolean hasDuplicateSet = false;
+        Object[] outerRankGroupArray = rateNumGroupMap.entrySet().toArray();
+        Object[] innerRankGroupArray = rateNumGroupMap.entrySet().toArray();
+
+        for (int i = 0; i < outerRankGroupArray.length; i++) {
+            for (int j = i + 1; j < innerRankGroupArray.length; j++) {
+
+                Map.Entry outerEntry = (Map.Entry) outerRankGroupArray[i];
+                Map.Entry innerEntry = (Map.Entry) innerRankGroupArray[j];
+
+                String outerId = outerEntry.getKey().toString();
+                String innerId = innerEntry.getKey().toString();
+
+                RankingGroup outerRankingGroup = (RankingGroup) outerEntry.getValue();
+                RankingGroup innerRankingGroup = (RankingGroup) innerEntry.getValue();
+
+                int outerGroupSize = outerRankingGroup.getAppSize();
+                int innerGroupSize = innerRankingGroup.getAppSize();
+
+                if (outerRankingGroup.getAppIdSet().containsAll(innerRankingGroup.getAppIdSet())
+                        || enableCombine(innerRankingGroup.getAppIdSet(), outerRankingGroup.getAppIdSet(), rate)) {
+
+                    if (outerGroupSize > innerGroupSize)
+                        rateNumGroupMap.remove(innerId);
+                    else
+                        rateNumGroupMap.remove(outerId);
+                    hasDuplicateSet = true;
+                }
+            }
+        }
+        if (hasDuplicateSet)
+            mapRecursiveCombine(rate);
+    }
+
+    private boolean enableCombine(Set<String> setA, Set<String> setB, double rate) {
+        Set<String> unionSet = Sets.union(setA, setB);
+        Set<String> intersectionSet = Sets.intersection(setA, setB);
+
+        double unionSize = unionSet.size();
+        double intersectionSize = intersectionSet.size();
+
+        return (intersectionSize / unionSize) >= rate;
     }
 
     private static class DateComparator implements Comparator<AppData> {
@@ -169,3 +292,4 @@ public class RateAmountAnalysis {
         }
     }
 }
+

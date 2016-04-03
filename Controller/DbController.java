@@ -8,10 +8,10 @@ import java.sql.PreparedStatement;
  * Created by chenhao on 3/24/16.
  */
 public class DbController {
-    public static final String url = "jdbc:mysql://115.159.100.165/Data";
+    public static final String url = "jdbc:mysql://127.0.0.1/Data";
     public static final String name = "com.mysql.jdbc.Driver";
-    public static final String user = "GroupTie";
-    public static final String password = "grouptie123456";
+    public static final String user = "root";
+    public static final String password = "root";
     public static final String rankQuerySql = "select appId,rankType,currentVersion,currentVersionReleaseDate,userRatingCountForCurrentVersion,userRatingCount,date from Data.AppInfo where rankType='update' and appId=? order by date";
 
     public Connection connection = null;

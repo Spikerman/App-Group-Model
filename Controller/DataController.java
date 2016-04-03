@@ -13,10 +13,10 @@ import java.util.*;
  */
 public class DataController {
 
-    public static final int RANK_MIN_NUM = 4;
+    public static final int RANK_MIN_NUM = 8;
 
     //APP被持续监测的最少天数
-    public static final int RATE_NUM_MIN_NUM = 12;
+    public static final int RATE_NUM_MIN_NUM = 21;
 
     private DbController dbController = new DbController();
     private List<AppData> appDataRecordListForRank = new LinkedList<>();

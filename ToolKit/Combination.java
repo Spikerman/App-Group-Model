@@ -10,8 +10,8 @@ import java.util.List;
 public class Combination {
 
     public static void main(String[] args) {
-        int[] num = new int[5000];
-        for (int i = 0; i < 5000; i++) {
+        int[] num = new int[200];
+        for (int i = 0; i < num.length; i++) {
             num[i] = i;
         }
         print(combine(num, 2));
