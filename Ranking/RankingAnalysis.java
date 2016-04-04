@@ -332,10 +332,7 @@ public class RankingAnalysis {
                     endDayMap.put(group.getEndDate(), newSet);
                 }
             }
-
-
         }
-
     }
 
     public void beginEndMapBuilder(List<RankingGroup> list, Map<Date, Set<RankingGroup>> beginDayMap, Map<Date, Set<RankingGroup>> endDayMap) {

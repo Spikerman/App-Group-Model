@@ -25,7 +25,6 @@ public class RateAmountAnalysis {
     //或者去元素含量小的一组Key值进行循环遍历
     private Map<String, List<AppData>> appDataMap = new HashMap<>();
     private Map<String, HashMap<Date, RateAmountDiffRecord>> diffRecordMap = new HashMap<>();
-    //private Map<String, List<RateAmountDiffRecord>> diffRecordMap = new HashMap<>();
     private Map<String, AppData> appMetaDataMap;
 
     public RateAmountAnalysis() {
@@ -77,6 +76,7 @@ public class RateAmountAnalysis {
 
         System.out.println("app数" + set.size());
         System.out.println("评论减少app数" + count);
+        rateAmountAnalysis.generateExportDate();
     }
 
     //生成评论差值的hash map, key 是app Id, value是存储着每天差值记录rateAmountDiffRecord的集合
@@ -305,6 +305,43 @@ public class RateAmountAnalysis {
                 return -1;
             else
                 return 0;
+        }
+    }
+
+
+    public void generateExportDate(){
+         Iterator iterator= rateNumGroupMap.entrySet().iterator();
+        while(iterator.hasNext()){
+            Map.Entry entry=(Map.Entry)iterator.next();
+            RankingGroup group=(RankingGroup)entry.getValue();
+            if(group.getAppSize()>3){
+                Set set=group.getAppIdSet();
+                Object [] array= set.toArray();
+                String idA=array[0].toString();
+                String idB=array[1].toString();
+                String idC=array[2].toString();
+                Map mapA= diffRecordMap.get(idA);
+                Map mapB= diffRecordMap.get(idB);
+                Map mapC= diffRecordMap.get(idC);
+                Set setA= mapA.keySet();
+                Set setB= mapB.keySet();
+                Set setC= mapC.keySet();
+                Set shareSet=Sets.intersection(setA,setB);
+                shareSet=Sets.intersection(shareSet,setC);
+                Iterator it=shareSet.iterator();
+                while(it.hasNext()){
+                    Date date=(Date)it.next();
+                    RateAmountDiffRecord recordA=(RateAmountDiffRecord) mapA.get(date);
+                    RateAmountDiffRecord recordB=(RateAmountDiffRecord) mapB.get(date);
+                    RateAmountDiffRecord recordC=(RateAmountDiffRecord) mapC.get(date);
+                    AppData appA=(AppData) appMetaDataMap.get(idA);
+                    AppData appB=(AppData) appMetaDataMap.get(idB);
+                    AppData appC=(AppData) appMetaDataMap.get(idC);
+                    dataController.insertTestDataToDb(date,recordA.amountDiff,recordB.amountDiff,recordC.
+                            amountDiff,appA.averageDailyRateNum,appB.averageDailyRateNum,appC.averageDailyRateNum);
+                }
+                return;
+            }
         }
     }
 }

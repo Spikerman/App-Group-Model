@@ -32,6 +32,7 @@ public class DataController {
     public DataController() {
         //initial the rank query statement
         dbController.setRankNumQueryStmt(DbController.rankQuerySql);
+        dbController.setInsertRateNumTestStmt(DbController.insertTestSql);
     }
 
     public static void main(String args[]) {
@@ -130,6 +131,21 @@ public class DataController {
             e.printStackTrace();
         }
         return list;
+    }
+
+    public void insertTestDataToDb(Date date,int diffA, int diffB, int diffC,double avgA,double avgB, double avgC){
+        try{
+            dbController.insertRateNumTestStmt.setDate(1,new java.sql.Date(date.getTime()));
+            dbController.insertRateNumTestStmt.setInt(2,diffA);
+            dbController.insertRateNumTestStmt.setInt(3,diffB);
+            dbController.insertRateNumTestStmt.setInt(4,diffC);
+            dbController.insertRateNumTestStmt.setDouble(5,avgA);
+            dbController.insertRateNumTestStmt.setDouble(6,avgB);
+            dbController.insertRateNumTestStmt.setDouble(7,avgC);
+            dbController.insertRateNumTestStmt.executeUpdate();
+        }catch(Exception e){
+            e.printStackTrace();
+        }
     }
 
     //generate appData List for rank num analysis
