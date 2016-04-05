@@ -31,7 +31,7 @@ public class IntegrationAnalyse {
     public static void main(String args[]) {
         IntegrationAnalyse integrationAnalyse = new IntegrationAnalyse();
         //double rate = 0.5;
-        integrationAnalyse.getAllMaps(0.8, 0.8).integrateGroup();
+        integrationAnalyse.getAllMaps(0.8, 0.5).integrateGroup();
         System.out.println("递归合并...");
         integrationAnalyse.recursiveCombine(0.8);
         System.out.println("递归合并后group size大小: " + integrationAnalyse.getGroupSetSize());
