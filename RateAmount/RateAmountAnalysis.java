@@ -5,6 +5,7 @@ import DataModel.AppData;
 import DataModel.RankingGroup;
 import DataModel.RateAmountDiffRecord;
 import ToolKit.Combination;
+import ToolKit.DateComparator;
 import com.google.common.collect.Sets;
 
 import java.util.*;
@@ -293,19 +294,6 @@ public class RateAmountAnalysis {
         double intersectionSize = intersectionSet.size();
 
         return (intersectionSize / unionSize) >= rate;
-    }
-
-    private static class DateComparator implements Comparator<AppData> {
-        public int compare(AppData app1, AppData app2) {
-            Date date1 = app1.date;
-            Date date2 = app2.date;
-            if (date1.after(date2))
-                return 1;
-            else if (date2.after(date1))
-                return -1;
-            else
-                return 0;
-        }
     }
 
 
