@@ -3,7 +3,6 @@ package Rating;
 import Controller.DataController;
 import DataModel.AppData;
 import DataModel.RankingGroup;
-import DataModel.RatingRecord;
 import ToolKit.DateComparator;
 import com.google.common.collect.Sets;
 
@@ -38,7 +37,9 @@ public class RatingAnalysis {
                 double delta = app1.minus(app0);
                 if(delta != 0)  record.put(app1.date, delta);
             }
-            recordMap.put((String)item.getKey(),record);
+            if(record.size()>DataController.RATING_MIN_NUM){
+                recordMap.put((String)item.getKey(),record);
+            }
         }
     }
 

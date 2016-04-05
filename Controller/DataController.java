@@ -17,6 +17,7 @@ public class DataController {
 
     //APP被持续监测的最少天数
     public static final int RATE_NUM_MIN_NUM = 20;
+    public static final int RATING_MIN_NUM = 5;
 
     private DbController dbController = new DbController();
     private List<AppData> appDataRecordListForRank = new LinkedList<>();
@@ -349,7 +350,7 @@ public class DataController {
         while (iterator.hasNext()) {
             Map.Entry entry = (Map.Entry) iterator.next();
             List appDataList = (List) entry.getValue();
-            if (appDataList.size() < RANK_MIN_NUM)
+            if (appDataList.size() < RATING_MIN_NUM)
                 iterator.remove();
         }
         return this;
