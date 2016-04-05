@@ -2,7 +2,11 @@ package Rating;
 
 import Controller.DataController;
 import DataModel.AppData;
+import DataModel.RankingGroup;
+import DataModel.RatingRecord;
 import ToolKit.DateComparator;
+import com.google.common.collect.Sets;
+
 import java.util.*;
 
 /**
@@ -10,6 +14,8 @@ import java.util.*;
  */
 public class RatingAnalysis {
     private Map<String, List<AppData>> appDataMap;
+    private Map<String, HashMap<Date,Double>> recordMap = new HashMap<>();
+    public Map<String, RankingGroup> ratingGroupMap = new HashMap<>();
 
     public RatingAnalysis(){
         DataController dataController = new DataController();
@@ -17,35 +23,88 @@ public class RatingAnalysis {
         appDataMap = dataController.getAppMapForRating();
     }
 
-    private void sortAppDataMap(){
+    private void generateRecordMap(){
         Iterator iter = appDataMap.entrySet().iterator();
         DateComparator dateComparator = new DateComparator();
         while(iter.hasNext()){
             Map.Entry item = (Map.Entry) iter.next();
             List<AppData> applist = (List)item.getValue();
             Collections.sort(applist, dateComparator);
-            System.out.println("caculate app"+item.getKey());
+            System.out.println("calculate app"+item.getKey());
+            HashMap<Date, Double> record = new HashMap<>();
             for(int i = 1;i<applist.size();i++){
                 AppData app1 =  applist.get(i);
                 AppData app0 = applist.get(i-1);
-                app1.minus(app0);
-                applist.remove(i);
-                applist.add(i,app1);
+                double delta = app1.minus(app0);
+                if(delta != 0)  record.put(app1.date, delta);
             }
-            System.out.println("过滤");
-            Iterator iter1 = applist.iterator();
-            while(iter1.hasNext()){
-                AppData app = (AppData)iter1.next();
-                if(app.delta==0){
-                    iter1.remove();
-                }
-            }
-            appDataMap.put((String)item.getKey(),applist);
+            recordMap.put((String)item.getKey(),record);
         }
     }
 
+    public void makeGroup( HashMap<Date, Double> outerMap, String outerAppId,
+                           HashMap<Date, Double> innerMap, String innerAppId) {
+
+        Set<Date> outerDateSet = outerMap.keySet();
+        Set<Date> innerDateSet = innerMap.keySet();
+
+        Set<Date> shareDateSet = (Set) Sets.intersection(outerDateSet, innerDateSet);
+
+        //取两个set的日期的交集
+//        outerDateSet.retainAll(innerDateSet);
+//        shareDateSet = outerDateSet;
+
+        int duplicateCount = 0;
+        for (Date date : shareDateSet) {
+            Double  outerRecord =  outerMap.get(date);
+            Double innerRecord = innerMap.get(date);
+
+            if ((outerRecord > 0 && innerRecord> 0)
+                    || (outerRecord< 0 && innerRecord < 0))
+                duplicateCount++;
+        }
+
+
+        if (duplicateCount >= 12) {
+            System.out.println(duplicateCount);
+            if (ratingGroupMap.containsKey(outerAppId)) {
+                RankingGroup rankingGroup = ratingGroupMap.get(outerAppId);
+                rankingGroup.getAppIdSet().add(innerAppId);
+            } else {
+                RankingGroup newGroup = new RankingGroup();
+                newGroup.getAppIdSet().add(outerAppId);
+                newGroup.getAppIdSet().add(innerAppId);
+                ratingGroupMap.put(outerAppId, newGroup);
+            }
+        }
+    }
+
+    public void generateRankingGroup(){
+        Object[] outerArray = recordMap.entrySet().toArray();
+        Object[] innerArray = recordMap.entrySet().toArray();
+
+        for (int i = 0; i < outerArray.length; i++) {
+            for (int j = i + 1; j < innerArray.length; j++) {
+
+                Map.Entry outerEntry = (Map.Entry) outerArray[i];
+                Map.Entry innerEntry = (Map.Entry) innerArray[j];
+
+                String outerId = outerEntry.getKey().toString();
+                String innerId = innerEntry.getKey().toString();
+
+                HashMap outerMap = (HashMap) outerEntry.getValue();
+                HashMap innerMap = (HashMap) innerEntry.getValue();
+
+                System.out.println("id pair: " + outerId + "  " + innerId);
+
+                makeGroup(outerMap, outerId, innerMap, innerId);
+            }
+        }
+
+    }
     public  void startAnalyzing(){
-        sortAppDataMap();
+        generateRecordMap();
+        generateRankingGroup();
     }
     public static  void main(String[] args){
         RatingAnalysis ratingAnalysis = new RatingAnalysis();

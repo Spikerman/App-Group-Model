@@ -146,7 +146,6 @@ public class RateAmountAnalysis {
                 System.out.println("id pair: " + outerId + "  " + innerId);
 
                 quickRateNumDiffPatternCombine(outerMap, outerId, innerMap, innerId);
-
             }
         }
     }
