@@ -19,5 +19,17 @@ public class AppData {
     public boolean hasNumDecrease = false;
     public double averageDailyRateNum;
 
+    public double averageUserRating;
+    public double averageUserRatingForCurrentVersion;
+    public double delta;
+
+    public double minus(AppData appData){
+        if(this.currentVersion==appData.currentVersion){
+            this.delta = this.averageUserRatingForCurrentVersion - appData.averageUserRatingForCurrentVersion;
+        }else {
+            this.delta = this.averageUserRating - appData.averageUserRating;
+        }
+        return delta;
+    }
 
 }

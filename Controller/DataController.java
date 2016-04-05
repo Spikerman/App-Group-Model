@@ -21,11 +21,13 @@ public class DataController {
     private DbController dbController = new DbController();
     private List<AppData> appDataRecordListForRank = new LinkedList<>();
     private List<AppData> appDataRecordListForRateNum = new LinkedList<>();
+    private List<AppData>appDataRecordListForRating  = new LinkedList<>();
     private Map<Date, Set<String>> freeUpMap = new TreeMap<>();
     private Map<Date, Set<String>> paidUpMap = new TreeMap<>();
     private Map<Date, Set<String>> freeDownMap = new TreeMap<>();
     private Map<Date, Set<String>> paidDownMap = new TreeMap<>();
     private Map<String, List<AppData>> appMapForRank = new TreeMap<>();
+    private Map<String, List<AppData>> appMapForRating = new TreeMap<>();
     private Map<String, List<AppData>> appMapForRateNum = new TreeMap<>();
     private Map<String, AppData> appMetaDataMapForRateNum = new HashMap<>();
 
@@ -55,6 +57,10 @@ public class DataController {
 
     public Map<String, List<AppData>> getAppMapForRank() {
         return appMapForRank;
+    }
+
+    public Map<String, List<AppData>> getAppMapForRating() {
+        return appMapForRating;
     }
 
     public Map<Date, Set<String>> getFreeUpMap() {
@@ -248,6 +254,33 @@ public class DataController {
         return this;
     }
 
+    public DataController buildAppDataListForRatingFromDb(){
+        String selectSql = "SELECT * FROM AppInfo Where rankType ='update'";
+        ResultSet rs;
+        Statement statement;
+        try {
+            statement = dbController.connection.createStatement();
+            System.out.println("start fetch...");
+            rs = statement.executeQuery(selectSql);
+            System.out.println("end fetch!");
+
+            while (rs.next()) {
+                AppData appData = new AppData();
+                appData.appId = rs.getString("appId");
+                appData.rankType = rs.getString("rankType");
+                appData.currentVersion = rs.getString("currentVersion");
+                appData.currentVersionReleaseDate = rs.getString("currentVersionReleaseDate");
+                appData.averageUserRating= Double.parseDouble(rs.getString("averageUserRating"));
+                appData.averageUserRatingForCurrentVersion = Double.parseDouble(rs.getString("averageUserRatingForCurrentVersion"));
+                appData.date = DateFormat.timestampToMonthDayYear(rs.getTimestamp("date"));
+                appDataRecordListForRating.add(appData);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return this;
+    }
 
     //build app map according to the app data list that fetch from the database
     public DataController buildAppDataMapForRank() {
@@ -301,5 +334,24 @@ public class DataController {
         return this;
     }
 
+    public DataController buildAppDataMapForRating(){
+        for (AppData appData : appDataRecordListForRating) {
+            if (appMapForRating.containsKey(appData.appId)) {
+                appMapForRating.get(appData.appId).add(appData);
+            } else {
+                List<AppData> newList = new LinkedList<>();
+                newList.add(appData);
+                appMapForRating.put(appData.appId, newList);
+            }
+        }
 
+        Iterator iterator = appMapForRating.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry entry = (Map.Entry) iterator.next();
+            List appDataList = (List) entry.getValue();
+            if (appDataList.size() < RANK_MIN_NUM)
+                iterator.remove();
+        }
+        return this;
+    }
 }

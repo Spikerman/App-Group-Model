@@ -14,8 +14,7 @@ public class DateFormat {
         if (timestamp == null) {
             return null;
         } else {
-            String time = monthDayYearFormatter.format(timestamp);
-            return new Date(time);
+            return new Date(timestamp.getTime());
         }
     }
 
