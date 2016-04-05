@@ -3,6 +3,7 @@ package DataModel;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Created by chenhao on 3/27/16.
@@ -10,7 +11,7 @@ import java.util.Set;
 public class RankingGroup {
     public int dateDiffNum = 0;
     public String groupType = "";
-    public Set<Date> commonChangeDateSet = new HashSet<>();
+    public Set<Date> commonChangeDateSet = new TreeSet<>();
     private Set<String> appIdSet = new HashSet<>();
     private Date beginDate;
     private Date endDate;
