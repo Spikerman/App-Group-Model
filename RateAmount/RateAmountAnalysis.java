@@ -5,6 +5,7 @@ import DataModel.AppData;
 import DataModel.RankingGroup;
 import DataModel.RateAmountDiffRecord;
 import ToolKit.Combination;
+import ToolKit.DateComparator;
 import com.google.common.collect.Sets;
 
 import java.util.*;
@@ -323,9 +324,7 @@ public class RateAmountAnalysis {
                     AppData appC = (AppData) appMetaDataMap.get(idC);
                     dataController.insertTestDataToDb(date, recordA.amountDiff, recordB.amountDiff, recordC.
                             amountDiff, appA.averageDailyRateNum, appB.averageDailyRateNum, appC.averageDailyRateNum);
-                }
-                return;
-            }
+
         }
     }
 
