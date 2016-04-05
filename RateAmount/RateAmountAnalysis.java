@@ -5,7 +5,6 @@ import DataModel.AppData;
 import DataModel.RankingGroup;
 import DataModel.RateAmountDiffRecord;
 import ToolKit.Combination;
-import ToolKit.DateComparator;
 import com.google.common.collect.Sets;
 
 import java.util.*;
@@ -43,7 +42,6 @@ public class RateAmountAnalysis {
         rateAmountAnalysis.rateNumGroupRankGenerate();
 
         System.out.println("----------------------------------------------");
-
 
         System.out.println("合并前Group数: " + rateAmountAnalysis.rateNumGroupMap.size());
 
@@ -128,8 +126,8 @@ public class RateAmountAnalysis {
 
     public void rateNumGroupRankGenerate() {
 
-        Object[] outerArray = diffRecordMap.entrySet().toArray();
-        Object[] innerArray = diffRecordMap.entrySet().toArray();
+        Object[] outerArray = diffRecordMap.entrySet().toArray().clone();
+        Object[] innerArray = diffRecordMap.entrySet().toArray().clone();
 
         for (int i = 0; i < outerArray.length; i++) {
             for (int j = i + 1; j < innerArray.length; j++) {
@@ -142,9 +140,7 @@ public class RateAmountAnalysis {
 
                 HashMap outerMap = (HashMap) outerEntry.getValue();
                 HashMap innerMap = (HashMap) innerEntry.getValue();
-                //System.out.println("id pair: " + outerId + "  " + innerId);
                 quickRateNumDiffPatternCombine(outerMap, outerId, innerMap, innerId);
-
             }
         }
     }
@@ -217,15 +213,11 @@ public class RateAmountAnalysis {
 
         Set<Date> shareDateSet = (Set) Sets.intersection(outerDateSet, innerDateSet);
 
-        //取两个set的日期的交集
-        outerDateSet.retainAll(innerDateSet);
-        shareDateSet = outerDateSet;
-
         int duplicateCount = 0;
         for (Date date : shareDateSet) {
             RateAmountDiffRecord outerDiffRecord = outerMap.get(date);
             RateAmountDiffRecord innerDiffRecord = innerMap.get(date);
-
+            
             if ((outerDiffRecord.amountDiff > outerAppAvgDiffNum && innerDiffRecord.amountDiff > innerAppAvgDiffNum)
                     || (outerDiffRecord.amountDiff < outerAppAvgDiffNum && innerDiffRecord.amountDiff < innerAppAvgDiffNum
                     && outerDiffRecord.amountDiff > 0 && innerDiffRecord.amountDiff > 0))
@@ -234,7 +226,6 @@ public class RateAmountAnalysis {
 
 
         if (duplicateCount >= DataController.RATE_NUM_MIN_NUM) {
-            //System.out.println(duplicateCount);
             if (rateNumGroupMap.containsKey(outerAppId)) {
                 RankingGroup rankingGroup = rateNumGroupMap.get(outerAppId);
                 rankingGroup.getAppIdSet().add(innerAppId);
@@ -325,6 +316,8 @@ public class RateAmountAnalysis {
                     dataController.insertTestDataToDb(date, recordA.amountDiff, recordB.amountDiff, recordC.
                             amountDiff, appA.averageDailyRateNum, appB.averageDailyRateNum, appC.averageDailyRateNum);
 
+                }
+            }
         }
     }
 

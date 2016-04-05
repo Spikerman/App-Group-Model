@@ -31,9 +31,9 @@ public class IntegrationAnalyse {
     public static void main(String args[]) {
         IntegrationAnalyse integrationAnalyse = new IntegrationAnalyse();
         //double rate = 0.5;
-        integrationAnalyse.getAllMaps(0.5, 0.5).integrateGroup();
+        integrationAnalyse.getAllMaps(0.8, 0.8).integrateGroup();
         System.out.println("递归合并...");
-        integrationAnalyse.recursiveCombine(0.5);
+        integrationAnalyse.recursiveCombine(0.8);
         System.out.println("递归合并后group size大小: " + integrationAnalyse.getGroupSetSize());
         integrationAnalyse.filterData(20);
         System.out.println("过滤后group size大小: " + integrationAnalyse.getGroupSetSize());
@@ -59,7 +59,7 @@ public class IntegrationAnalyse {
         rateAmountAnalysis.rateNumGroupRankGenerate();
         System.out.println("rate num group 合并前Group数: " + rateAmountAnalysis.rateNumGroupMap.size());
         rateAmountAnalysis.mapRecursiveCombine(rateNumRate);
-        System.out.println("rate num group 合并后Group数" + rateAmountAnalysis.rateNumGroupMap.size());
+        System.out.println("rate num group 合并后Group数: " + rateAmountAnalysis.rateNumGroupMap.size());
         this.rateNumGroupMap = rateAmountAnalysis.rateNumGroupMap;
         return this;
     }

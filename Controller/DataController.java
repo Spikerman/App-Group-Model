@@ -13,16 +13,15 @@ import java.util.*;
  */
 public class DataController {
 
-    public static final int RANK_MIN_NUM = 8;
-
+    public static final int RANK_MIN_NUM = 5;
     //APP被持续监测的最少天数
-    public static final int RATE_NUM_MIN_NUM = 20;
+    public static final int RATE_NUM_MIN_NUM = 5;
     public static final int RATING_MIN_NUM = 5;
 
     private DbController dbController = new DbController();
     private List<AppData> appDataRecordListForRank = new LinkedList<>();
     private List<AppData> appDataRecordListForRateNum = new LinkedList<>();
-    private List<AppData>appDataRecordListForRating  = new LinkedList<>();
+    private List<AppData> appDataRecordListForRating = new LinkedList<>();
     private Map<Date, Set<String>> freeUpMap = new TreeMap<>();
     private Map<Date, Set<String>> paidUpMap = new TreeMap<>();
     private Map<Date, Set<String>> freeDownMap = new TreeMap<>();
@@ -103,7 +102,7 @@ public class DataController {
                 appData.ranking = rs.getInt("ranking");
                 appData.rankFloatNum = rs.getInt("rankFloatNum");
                 appData.date = DateFormat.timestampToMonthDayYear(rs.getTimestamp("date"));
-                System.out.println(appData.appId + " " + appData.rankType + " " + appData.ranking + " " + appData.rankFloatNum + " " + appData.date);
+                //System.out.println(appData.appId + " " + appData.rankType + " " + appData.ranking + " " + appData.rankFloatNum + " " + appData.date);
                 appDataRecordListForRank.add((appData));
             }
 
@@ -253,7 +252,7 @@ public class DataController {
         return this;
     }
 
-    public DataController buildAppDataListForRatingFromDb(){
+    public DataController buildAppDataListForRatingFromDb() {
         String selectSql = "SELECT * FROM AppInfo Where rankType ='update'";
         ResultSet rs;
         Statement statement;
@@ -269,7 +268,7 @@ public class DataController {
                 appData.rankType = rs.getString("rankType");
                 appData.currentVersion = rs.getString("currentVersion");
                 appData.currentVersionReleaseDate = rs.getString("currentVersionReleaseDate");
-                appData.averageUserRating= Double.parseDouble(rs.getString("averageUserRating"));
+                appData.averageUserRating = Double.parseDouble(rs.getString("averageUserRating"));
                 appData.averageUserRatingForCurrentVersion = Double.parseDouble(rs.getString("averageUserRatingForCurrentVersion"));
                 appData.date = DateFormat.timestampToMonthDayYear(rs.getTimestamp("date"));
                 appDataRecordListForRating.add(appData);
@@ -333,7 +332,7 @@ public class DataController {
         return this;
     }
 
-    public DataController buildAppDataMapForRating(){
+    public DataController buildAppDataMapForRating() {
         for (AppData appData : appDataRecordListForRating) {
             if (appMapForRating.containsKey(appData.appId)) {
                 appMapForRating.get(appData.appId).add(appData);
