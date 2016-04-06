@@ -13,16 +13,15 @@ import java.util.*;
  */
 public class DataController {
 
-    public static final int RANK_MIN_NUM = 8;
-
+    public static final int RANK_MIN_NUM = 5;
     //APP被持续监测的最少天数
-    public static final int RATE_NUM_MIN_NUM = 20;
+    public static final int RATE_NUM_MIN_NUM = 5;
     public static final int RATING_MIN_NUM = 5;
 
     private DbController dbController = new DbController();
     private List<AppData> appDataRecordListForRank = new LinkedList<>();
     private List<AppData> appDataRecordListForRateNum = new LinkedList<>();
-    private List<AppData>appDataRecordListForRating  = new LinkedList<>();
+    private List<AppData> appDataRecordListForRating = new LinkedList<>();
     private Map<Date, Set<String>> freeUpMap = new TreeMap<>();
     private Map<Date, Set<String>> paidUpMap = new TreeMap<>();
     private Map<Date, Set<String>> freeDownMap = new TreeMap<>();
@@ -92,9 +91,9 @@ public class DataController {
         ResultSet rs;
         try {
             statement = dbController.connection.createStatement();
-            System.out.println("start fetch");
+            System.out.println("start rank data fetch...");
             rs = statement.executeQuery(selectSql);
-            System.out.println("end fetch");
+            System.out.println("end rank data fetch...");
 
             while (rs.next()) {
                 AppData appData = new AppData();
@@ -103,14 +102,12 @@ public class DataController {
                 appData.ranking = rs.getInt("ranking");
                 appData.rankFloatNum = rs.getInt("rankFloatNum");
                 appData.date = DateFormat.timestampToMonthDayYear(rs.getTimestamp("date"));
-                System.out.println(appData.appId + " " + appData.rankType + " " + appData.ranking + " " + appData.rankFloatNum + " " + appData.date);
+                //System.out.println(appData.appId + " " + appData.rankType + " " + appData.ranking + " " + appData.rankFloatNum + " " + appData.date);
                 appDataRecordListForRank.add((appData));
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-
         }
 
         return this;
@@ -140,17 +137,17 @@ public class DataController {
         return list;
     }
 
-    public void insertTestDataToDb(Date date,int diffA, int diffB, int diffC,double avgA,double avgB, double avgC){
-        try{
-            dbController.insertRateNumTestStmt.setDate(1,new java.sql.Date(date.getTime()));
-            dbController.insertRateNumTestStmt.setInt(2,diffA);
-            dbController.insertRateNumTestStmt.setInt(3,diffB);
-            dbController.insertRateNumTestStmt.setInt(4,diffC);
-            dbController.insertRateNumTestStmt.setDouble(5,avgA);
-            dbController.insertRateNumTestStmt.setDouble(6,avgB);
-            dbController.insertRateNumTestStmt.setDouble(7,avgC);
+    public void insertTestDataToDb(Date date, int diffA, int diffB, int diffC, double avgA, double avgB, double avgC) {
+        try {
+            dbController.insertRateNumTestStmt.setDate(1, new java.sql.Date(date.getTime()));
+            dbController.insertRateNumTestStmt.setInt(2, diffA);
+            dbController.insertRateNumTestStmt.setInt(3, diffB);
+            dbController.insertRateNumTestStmt.setInt(4, diffC);
+            dbController.insertRateNumTestStmt.setDouble(5, avgA);
+            dbController.insertRateNumTestStmt.setDouble(6, avgB);
+            dbController.insertRateNumTestStmt.setDouble(7, avgC);
             dbController.insertRateNumTestStmt.executeUpdate();
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -162,9 +159,9 @@ public class DataController {
         Statement statement;
         try {
             statement = dbController.connection.createStatement();
-            System.out.println("start fetch");
+            System.out.println("start rate num data fetch");
             rs = statement.executeQuery(selectSql);
-            System.out.println("end fetch");
+            System.out.println("end rate num data fetch");
 
             while (rs.next()) {
                 AppData appData = new AppData();
@@ -255,7 +252,7 @@ public class DataController {
         return this;
     }
 
-    public DataController buildAppDataListForRatingFromDb(){
+    public DataController buildAppDataListForRatingFromDb() {
         String selectSql = "SELECT * FROM AppInfo Where rankType ='update'";
         ResultSet rs;
         Statement statement;
@@ -271,7 +268,7 @@ public class DataController {
                 appData.rankType = rs.getString("rankType");
                 appData.currentVersion = rs.getString("currentVersion");
                 appData.currentVersionReleaseDate = rs.getString("currentVersionReleaseDate");
-                appData.averageUserRating= Double.parseDouble(rs.getString("averageUserRating"));
+                appData.averageUserRating = Double.parseDouble(rs.getString("averageUserRating"));
                 appData.averageUserRatingForCurrentVersion = Double.parseDouble(rs.getString("averageUserRatingForCurrentVersion"));
                 appData.date = DateFormat.timestampToMonthDayYear(rs.getTimestamp("date"));
                 appDataRecordListForRating.add(appData);
@@ -335,7 +332,7 @@ public class DataController {
         return this;
     }
 
-    public DataController buildAppDataMapForRating(){
+    public DataController buildAppDataMapForRating() {
         for (AppData appData : appDataRecordListForRating) {
             if (appMapForRating.containsKey(appData.appId)) {
                 appMapForRating.get(appData.appId).add(appData);

@@ -11,24 +11,24 @@ import java.util.*;
  * Created by chenhao on 3/27/16.
  */
 public class RankingAnalysis {
+    public TreeMap<String, RankingGroup> rankGroupMap = new TreeMap<>();
     private DataController dataController;
     private List<RankingGroup> groupList = new LinkedList<>();
-
     private TreeMap<Date, Set<RankingGroup>> endDayMap = new TreeMap<>();
     private TreeMap<Date, Set<RankingGroup>> beginDayMap = new TreeMap<>();
-    private TreeMap<String, RankingGroup> rankGroupMap = new TreeMap<>();
 
     public RankingAnalysis(DataController dataController) {
         this.dataController = dataController;
         dataController.getRankAppInfoFromDb().buildAppDataMapForRank();
+
     }
 
     public static void main(String args[]) {
         DataController dataController = new DataController();
         RankingAnalysis rankingAnalysis = new RankingAnalysis(dataController);
         rankingAnalysis.rankGroupMapGenerate();
-
         System.out.println("合并前Group数: " + rankingAnalysis.rankGroupMap.size());
+
         double rate = 0.8;
         rankingAnalysis.mapRecursiveCombine(rate);
 
@@ -40,6 +40,7 @@ public class RankingAnalysis {
             RankingGroup group = (RankingGroup) entry.getValue();
             System.out.println(group.getAppSize());
         }
+        rankingAnalysis.generateExportDate();
     }
 
     public TreeMap<String, RankingGroup> getRankGroupMap() {
@@ -540,4 +541,45 @@ public class RankingAnalysis {
         double intersectionSize = intersectionSet.size();
         return (intersectionSize / unionSize) >= rate;
     }
+
+    public void generateExportDate() {
+        Iterator iterator = rankGroupMap.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry entry = (Map.Entry) iterator.next();
+            RankingGroup group = (RankingGroup) entry.getValue();
+            if (group.getAppSize() > 20) {
+                Set set = group.getAppIdSet();
+                Object[] array = set.toArray();
+                String idA = array[3].toString();
+                String idB = array[4].toString();
+                String idC = array[5].toString();
+                Map map = dataController.getAppMapForRank();
+                List<AppData> listA = (List<AppData>) map.get(idA);
+                List<AppData> listB = (List<AppData>) map.get(idB);
+                List<AppData> listC = (List<AppData>) map.get(idC);
+                int appA;
+                int appB;
+                int appC;
+                Set<Date> dataSet = group.commonChangeDateSet;
+                for (Date date : dataSet) {
+                    appA = getDateAppData(date, listA);
+                    appB = getDateAppData(date, listB);
+                    appC = getDateAppData(date, listC);
+                    dataController.insertTestDataToDb(date, appA, appB, appC, 0, 0, 0);
+                }
+                return;
+            }
+        }
+    }
+
+    private int getDateAppData(Date date, List<AppData> list) {
+        for (AppData app : list) {
+            if (app.date.equals(date)) {
+                return app.ranking;
+            }
+        }
+        return 0;
+    }
+
+
 }

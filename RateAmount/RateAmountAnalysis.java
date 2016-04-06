@@ -5,7 +5,6 @@ import DataModel.AppData;
 import DataModel.RankingGroup;
 import DataModel.RateAmountDiffRecord;
 import ToolKit.Combination;
-import ToolKit.DateComparator;
 import com.google.common.collect.Sets;
 
 import java.util.*;
@@ -16,7 +15,7 @@ import java.util.*;
  */
 
 public class RateAmountAnalysis {
-    public Map<String, RankingGroup> rateNumGroupMap = new HashMap<>();
+    public Map<String, RankingGroup> rateNumGroupMap = new TreeMap<>();
     private DateComparator dateComparator = new DateComparator();
     private DataController dataController;
     //对diffRecordMap数据结构做出修改,改为
@@ -28,22 +27,21 @@ public class RateAmountAnalysis {
     private Map<String, HashMap<Date, RateAmountDiffRecord>> diffRecordMap = new HashMap<>();
     private Map<String, AppData> appMetaDataMap;
 
-    public RateAmountAnalysis() {
-        dataController = new DataController();
+    public RateAmountAnalysis(DataController dataController) {
+        this.dataController = dataController;
         dataController.buildAppDataListForRateNumFromDb().buildAppDataMapForRateNum();
         appDataMap = dataController.getAppMapForRateNum();
         appMetaDataMap = dataController.getAppMetaDataMapForRateNum();
     }
 
     public static void main(String args[]) {
-        RateAmountAnalysis rateAmountAnalysis = new RateAmountAnalysis();
-        rateAmountAnalysis.dataController.getAppMapForRateNum();
-        rateAmountAnalysis.buildDiffRecordMap();
+        DataController dataController = new DataController();
+        RateAmountAnalysis rateAmountAnalysis = new RateAmountAnalysis(dataController);
 
+        rateAmountAnalysis.buildDiffRecordMap();
         rateAmountAnalysis.rateNumGroupRankGenerate();
 
         System.out.println("----------------------------------------------");
-
 
         System.out.println("合并前Group数: " + rateAmountAnalysis.rateNumGroupMap.size());
 
@@ -81,7 +79,7 @@ public class RateAmountAnalysis {
     }
 
     //生成评论差值的hash map, key 是app Id, value是存储着每天差值记录rateAmountDiffRecord的集合
-    private void buildDiffRecordMap() {
+    public void buildDiffRecordMap() {
         Iterator iterator = appDataMap.keySet().iterator();
         HashMap<Date, RateAmountDiffRecord> map;
         while (iterator.hasNext()) {
@@ -128,8 +126,8 @@ public class RateAmountAnalysis {
 
     public void rateNumGroupRankGenerate() {
 
-        Object[] outerArray = diffRecordMap.entrySet().toArray();
-        Object[] innerArray = diffRecordMap.entrySet().toArray();
+        Object[] outerArray = diffRecordMap.entrySet().toArray().clone();
+        Object[] innerArray = diffRecordMap.entrySet().toArray().clone();
 
         for (int i = 0; i < outerArray.length; i++) {
             for (int j = i + 1; j < innerArray.length; j++) {
@@ -142,9 +140,6 @@ public class RateAmountAnalysis {
 
                 HashMap outerMap = (HashMap) outerEntry.getValue();
                 HashMap innerMap = (HashMap) innerEntry.getValue();
-
-                System.out.println("id pair: " + outerId + "  " + innerId);
-
                 quickRateNumDiffPatternCombine(outerMap, outerId, innerMap, innerId);
             }
         }
@@ -195,7 +190,7 @@ public class RateAmountAnalysis {
             }
         }
         if (duplicateCount >= 10) {
-            System.out.println(duplicateCount);
+            //System.out.println(duplicateCount);
             if (rateNumGroupMap.containsKey(outerAppId)) {
                 RankingGroup rankingGroup = rateNumGroupMap.get(outerAppId);
                 rankingGroup.getAppIdSet().add(innerAppId);
@@ -218,15 +213,11 @@ public class RateAmountAnalysis {
 
         Set<Date> shareDateSet = (Set) Sets.intersection(outerDateSet, innerDateSet);
 
-        //取两个set的日期的交集
-        outerDateSet.retainAll(innerDateSet);
-        shareDateSet = outerDateSet;
-
         int duplicateCount = 0;
         for (Date date : shareDateSet) {
             RateAmountDiffRecord outerDiffRecord = outerMap.get(date);
             RateAmountDiffRecord innerDiffRecord = innerMap.get(date);
-
+            
             if ((outerDiffRecord.amountDiff > outerAppAvgDiffNum && innerDiffRecord.amountDiff > innerAppAvgDiffNum)
                     || (outerDiffRecord.amountDiff < outerAppAvgDiffNum && innerDiffRecord.amountDiff < innerAppAvgDiffNum
                     && outerDiffRecord.amountDiff > 0 && innerDiffRecord.amountDiff > 0))
@@ -234,8 +225,7 @@ public class RateAmountAnalysis {
         }
 
 
-        if (duplicateCount >= 12) {
-            System.out.println(duplicateCount);
+        if (duplicateCount >= DataController.RATE_NUM_MIN_NUM) {
             if (rateNumGroupMap.containsKey(outerAppId)) {
                 RankingGroup rankingGroup = rateNumGroupMap.get(outerAppId);
                 rankingGroup.getAppIdSet().add(innerAppId);
@@ -295,40 +285,52 @@ public class RateAmountAnalysis {
         return (intersectionSize / unionSize) >= rate;
     }
 
+    public void generateExportDate() {
+        Iterator iterator = rateNumGroupMap.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry entry = (Map.Entry) iterator.next();
+            RankingGroup group = (RankingGroup) entry.getValue();
+            if (group.getAppSize() > 3) {
+                Set set = group.getAppIdSet();
+                Object[] array = set.toArray();
+                String idA = array[0].toString();
+                String idB = array[1].toString();
+                String idC = array[2].toString();
+                Map mapA = diffRecordMap.get(idA);
+                Map mapB = diffRecordMap.get(idB);
+                Map mapC = diffRecordMap.get(idC);
+                Set setA = mapA.keySet();
+                Set setB = mapB.keySet();
+                Set setC = mapC.keySet();
+                Set shareSet = Sets.intersection(setA, setB);
+                shareSet = Sets.intersection(shareSet, setC);
+                Iterator it = shareSet.iterator();
+                while (it.hasNext()) {
+                    Date date = (Date) it.next();
+                    RateAmountDiffRecord recordA = (RateAmountDiffRecord) mapA.get(date);
+                    RateAmountDiffRecord recordB = (RateAmountDiffRecord) mapB.get(date);
+                    RateAmountDiffRecord recordC = (RateAmountDiffRecord) mapC.get(date);
+                    AppData appA = (AppData) appMetaDataMap.get(idA);
+                    AppData appB = (AppData) appMetaDataMap.get(idB);
+                    AppData appC = (AppData) appMetaDataMap.get(idC);
+                    dataController.insertTestDataToDb(date, recordA.amountDiff, recordB.amountDiff, recordC.
+                            amountDiff, appA.averageDailyRateNum, appB.averageDailyRateNum, appC.averageDailyRateNum);
 
-    public void generateExportDate(){
-         Iterator iterator= rateNumGroupMap.entrySet().iterator();
-        while(iterator.hasNext()){
-            Map.Entry entry=(Map.Entry)iterator.next();
-            RankingGroup group=(RankingGroup)entry.getValue();
-            if(group.getAppSize()>3){
-                Set set=group.getAppIdSet();
-                Object [] array= set.toArray();
-                String idA=array[0].toString();
-                String idB=array[1].toString();
-                String idC=array[2].toString();
-                Map mapA= diffRecordMap.get(idA);
-                Map mapB= diffRecordMap.get(idB);
-                Map mapC= diffRecordMap.get(idC);
-                Set setA= mapA.keySet();
-                Set setB= mapB.keySet();
-                Set setC= mapC.keySet();
-                Set shareSet=Sets.intersection(setA,setB);
-                shareSet=Sets.intersection(shareSet,setC);
-                Iterator it=shareSet.iterator();
-                while(it.hasNext()){
-                    Date date=(Date)it.next();
-                    RateAmountDiffRecord recordA=(RateAmountDiffRecord) mapA.get(date);
-                    RateAmountDiffRecord recordB=(RateAmountDiffRecord) mapB.get(date);
-                    RateAmountDiffRecord recordC=(RateAmountDiffRecord) mapC.get(date);
-                    AppData appA=(AppData) appMetaDataMap.get(idA);
-                    AppData appB=(AppData) appMetaDataMap.get(idB);
-                    AppData appC=(AppData) appMetaDataMap.get(idC);
-                    dataController.insertTestDataToDb(date,recordA.amountDiff,recordB.amountDiff,recordC.
-                            amountDiff,appA.averageDailyRateNum,appB.averageDailyRateNum,appC.averageDailyRateNum);
                 }
-                return;
             }
+        }
+    }
+
+    private static class DateComparator implements Comparator<AppData> {
+        public int compare(AppData app1, AppData app2) {
+            Date date1 = app1.date;
+            Date date2 = app2.date;
+            if (date1.after(date2))
+                return 1;
+            else if (date2.after(date1))
+                return -1;
+            else
+                return 0;
         }
     }
 }
