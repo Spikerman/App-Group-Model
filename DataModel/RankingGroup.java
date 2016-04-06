@@ -74,5 +74,6 @@ public class RankingGroup {
                 commonChangeDateSet) {
             System.out.print("\t"+date);
         }
+        System.out.println();
     }
 }

@@ -14,7 +14,7 @@ public class DateFormat {
         if (timestamp == null) {
             return null;
         } else {
-            return new Date(timestamp.getTime());
+            return new Date(timestamp.getYear(),timestamp.getMonth(),timestamp.getDate());
         }
     }
 

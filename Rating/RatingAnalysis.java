@@ -117,9 +117,9 @@ public class RatingAnalysis {
             Map.Entry item =(Map.Entry) iter.next();
             RankingGroup group =(RankingGroup) item.getValue();
             group.print();
-            for (String appid :group.getAppIdSet()) {
-                print(appid);
-            }
+//            for (String appid :group.getAppIdSet()) {
+//                print(appid);
+//            }
         }
     }
     public void print(String appid){
