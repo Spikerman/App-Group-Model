@@ -54,19 +54,21 @@ public class RatingAnalysis {
         //取两个set的日期的交集
 //        outerDateSet.retainAll(innerDateSet);
 //        shareDateSet = outerDateSet;
-
+        Set<Date> dates = new HashSet<>();
         int duplicateCount = 0;
         for (Date date : shareDateSet) {
             Double  outerRecord =  outerMap.get(date);
             Double innerRecord = innerMap.get(date);
 
             if ((outerRecord > 0 && innerRecord> 0)
-                    || (outerRecord< 0 && innerRecord < 0))
+                    || (outerRecord< 0 && innerRecord < 0)){
                 duplicateCount++;
+                dates.add(date);
+            }
         }
 
 
-        if (duplicateCount >= 12) {
+        if (duplicateCount >= 1) {
             System.out.println(duplicateCount);
             if (ratingGroupMap.containsKey(outerAppId)) {
                 RankingGroup rankingGroup = ratingGroupMap.get(outerAppId);
@@ -75,6 +77,7 @@ public class RatingAnalysis {
                 RankingGroup newGroup = new RankingGroup();
                 newGroup.getAppIdSet().add(outerAppId);
                 newGroup.getAppIdSet().add(innerAppId);
+                newGroup.commonChangeDateSet = dates;
                 ratingGroupMap.put(outerAppId, newGroup);
             }
         }
@@ -106,6 +109,27 @@ public class RatingAnalysis {
     public  void startAnalyzing(){
         generateRecordMap();
         generateRankingGroup();
+        print(ratingGroupMap);
+    }
+    public void print( Map<String, RankingGroup> ratingGroupMap){
+        Iterator iter = ratingGroupMap.entrySet().iterator();
+        while(iter.hasNext()){
+            Map.Entry item =(Map.Entry) iter.next();
+            RankingGroup group =(RankingGroup) item.getValue();
+            group.print();
+            for (String appid :group.getAppIdSet()) {
+                print(appid);
+            }
+        }
+    }
+    public void print(String appid){
+        HashMap<Date,Double> record = recordMap.get(appid);
+        Iterator iter = record.entrySet().iterator();
+        System.out.println("App id:"+appid);
+        while(iter.hasNext()){
+            Map.Entry item = (Map.Entry)iter.next();
+            System.out.println(item.getKey()+"\t"+item.getValue());
+        }
     }
     public static  void main(String[] args){
         RatingAnalysis ratingAnalysis = new RatingAnalysis();

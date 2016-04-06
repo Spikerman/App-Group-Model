@@ -61,5 +61,17 @@ public class RankingGroup {
         return commonChangeDateSet.size();
     }
 
-
+    public void print(){
+        System.out.println("----------------------------------");
+        System.out.print("app id:");
+        for (String s:
+             appIdSet) {
+            System.out.print("\t"+s);
+        }
+        System.out.print("\nDates:");
+        for (Date date:
+                commonChangeDateSet) {
+            System.out.print("\t"+date);
+        }
+    }
 }
