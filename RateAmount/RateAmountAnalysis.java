@@ -39,7 +39,7 @@ public class RateAmountAnalysis {
         RateAmountAnalysis rateAmountAnalysis = new RateAmountAnalysis(dataController);
 
         rateAmountAnalysis.buildDiffRecordMap();
-        rateAmountAnalysis.rateNumGroupRankGenerate();
+        rateAmountAnalysis.rateNumGroupMapGenerate();
 
         System.out.println("----------------------------------------------");
 
@@ -124,7 +124,7 @@ public class RateAmountAnalysis {
         appMetaDataMap.get(appId).hasNumDecrease = true;
     }
 
-    public void rateNumGroupRankGenerate() {
+    public void rateNumGroupMapGenerate() {
 
         Object[] outerArray = diffRecordMap.entrySet().toArray().clone();
         Object[] innerArray = diffRecordMap.entrySet().toArray().clone();

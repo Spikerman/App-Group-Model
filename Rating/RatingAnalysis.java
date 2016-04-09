@@ -27,6 +27,7 @@ public class RatingAnalysis {
     public RatingAnalysis(DataController dataController) {
         this.dataController = dataController;
         dataController.buildAppDataListForRatingFromDb().buildAppDataMapForRating();
+        appDataMap = dataController.getAppMapForRating();
     }
 
     public static void main(String[] args) {
@@ -35,19 +36,19 @@ public class RatingAnalysis {
         System.out.println("递归合并前: rating group size: " + ratingAnalysis.ratingGroupMap.size());
         double rate=0.8;
         ratingAnalysis.mapRecursiveCombine(rate);
-        System.out.println("递归后并前: rating group size: " + ratingAnalysis.ratingGroupMap.size());
+        System.out.println("递归后并后: rating group size: " + ratingAnalysis.ratingGroupMap.size());
 
 
     }
 
-    public void generateRecordMap() {
-        Iterator iter = appDataMap.entrySet().iterator();
+    public void buildDiffRecordMap() {
+        Iterator iterator = appDataMap.entrySet().iterator();
 
         System.out.println("收集的APP总数" + appDataMap.size());
 
         DateComparator dateComparator = new DateComparator();
-        while (iter.hasNext()) {
-            Map.Entry entry = (Map.Entry) iter.next();
+        while (iterator.hasNext()) {
+            Map.Entry entry = (Map.Entry) iterator.next();
             String appId = (String) entry.getKey();
             List<AppData> appList = (List) entry.getValue();
             Collections.sort(appList, dateComparator);
@@ -89,7 +90,7 @@ public class RatingAnalysis {
             }
         }
 
-        if (duplicateCount >= 2) {
+        if (duplicateCount >= 3) {
             if (ratingGroupMap.containsKey(outerAppId)) {
                 RankingGroup ratingGroup = ratingGroupMap.get(outerAppId);
                 ratingGroup.getAppIdSet().add(innerAppId);
@@ -104,7 +105,7 @@ public class RatingAnalysis {
         }
     }
 
-    public void generateRatingGroup() {
+    public void ratingGroupMapGenerate() {
         Object[] outerArray = rateRecordMap.entrySet().toArray();
         Object[] innerArray = rateRecordMap.entrySet().toArray();
         for (int i = 0; i < outerArray.length; i++) {
@@ -125,9 +126,8 @@ public class RatingAnalysis {
     }
 
     public void startAnalyzing() {
-        generateRecordMap();
-        generateRatingGroup();
-        //print(ratingGroupMap);
+        buildDiffRecordMap();
+        ratingGroupMapGenerate();
     }
 
     public void print(Map<String, RankingGroup> ratingGroupMap) {

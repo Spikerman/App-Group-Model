@@ -22,6 +22,7 @@ public class IntegrationAnalyse {
     private RatingAnalysis ratingAnalysis;
     private Map rankingGroupMap;
     private Map rateNumGroupMap;
+    private Map ratingGroupMap;
     private DataController dataController;
     private Map rateGroupMap;
 
@@ -29,19 +30,19 @@ public class IntegrationAnalyse {
         dataController = new DataController();
         rankingAnalysis = new RankingAnalysis(dataController);
         rateAmountAnalysis = new RateAmountAnalysis(dataController);
-        rankingAnalysis = new RankingAnalysis(dataController);
+        ratingAnalysis = new RatingAnalysis(dataController);
     }
 
     public static void main(String args[]) {
         IntegrationAnalyse integrationAnalyse = new IntegrationAnalyse();
-        //double rate = 0.5;
-        integrationAnalyse.getAllMaps(0.8, 0.8, 0.8).integrateGroup();
+
+        integrationAnalyse.getAllMaps(0.8, 0.8, 0.8).integrateGroup2();
         System.out.println("递归合并...");
-        integrationAnalyse.recursiveCombine(0.5);
+        integrationAnalyse.recursiveCombine(0.8);
         System.out.println("递归合并后group size大小: " + integrationAnalyse.getGroupSetSize());
         integrationAnalyse.filterData(20);
         System.out.println("过滤后group size大小: " + integrationAnalyse.getGroupSetSize());
-        System.out.println("______________________________");
+        System.out.println("------------------------------------------");
         integrationAnalyse.printEachGroupSize();
 
     }
@@ -51,6 +52,16 @@ public class IntegrationAnalyse {
     }
 
     private IntegrationAnalyse getAllMaps(double rankRate, double rateNumRate, double ratingRate) {
+
+//        //获取评分榜指标数据
+//        ratingAnalysis.buildDiffRecordMap();
+//        ratingAnalysis.ratingGroupMapGenerate();
+//        System.out.println("rating group 合并前Group数: " + ratingAnalysis.ratingGroupMap.size());
+//        ratingAnalysis.mapRecursiveCombine(ratingRate);
+//        System.out.println("rating group 合并后Group数: " + ratingAnalysis.ratingGroupMap.size());
+//        this.ratingGroupMap = ratingAnalysis.ratingGroupMap;
+
+
         //获取排行榜指标数据
         rankingAnalysis.rankGroupMapGenerate();
         System.out.println("ranking group 合并前Group数: " + rankingAnalysis.rankGroupMap.size());
@@ -58,17 +69,14 @@ public class IntegrationAnalyse {
         System.out.println("ranking group 合并后Group数: " + rankingAnalysis.rankGroupMap.size());
         this.rankingGroupMap = rankingAnalysis.rankGroupMap;
 
+
         //获取评论数量指标数据
         rateAmountAnalysis.buildDiffRecordMap();
-        rateAmountAnalysis.rateNumGroupRankGenerate();
+        rateAmountAnalysis.rateNumGroupMapGenerate();
         System.out.println("rate num group 合并前Group数: " + rateAmountAnalysis.rateNumGroupMap.size());
         rateAmountAnalysis.mapRecursiveCombine(rateNumRate);
         System.out.println("rate num group 合并后Group数: " + rateAmountAnalysis.rateNumGroupMap.size());
         this.rateNumGroupMap = rateAmountAnalysis.rateNumGroupMap;
-
-        ratingAnalysis.generateRecordMap();
-        ratingAnalysis.generateRatingGroup();
-
         return this;
     }
 
@@ -112,6 +120,32 @@ public class IntegrationAnalyse {
                 groupSet.add(rateNumGroup.getAppIdSet());
             }
         }
+        System.out.println("递归合并前的 group size: " + groupSet.size());
+        return this;
+    }
+
+    public IntegrationAnalyse integrateGroup2() {
+        Iterator rankIterator = rankingGroupMap.entrySet().iterator();
+        Iterator rateNumIterator = rateNumGroupMap.entrySet().iterator();
+//        Iterator ratingIterator = ratingGroupMap.entrySet().iterator();
+        while (rankIterator.hasNext()) {
+            Map.Entry entry = (Map.Entry) rankIterator.next();
+            RankingGroup group = (RankingGroup) entry.getValue();
+            groupSet.add(group.getAppIdSet());
+        }
+
+        while (rateNumIterator.hasNext()) {
+            Map.Entry entry = (Map.Entry) rateNumIterator.next();
+            RankingGroup group = (RankingGroup) entry.getValue();
+            groupSet.add(group.getAppIdSet());
+        }
+
+//        while (ratingIterator.hasNext()) {
+//            Map.Entry entry = (Map.Entry) ratingIterator.next();
+//            RankingGroup group = (RankingGroup) entry.getValue();
+//            groupSet.add(group.getAppIdSet());
+//        }
+
         System.out.println("递归合并前的 group size: " + groupSet.size());
         return this;
     }

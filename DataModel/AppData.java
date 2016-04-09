@@ -33,7 +33,7 @@ public class AppData {
             return delta;
 
         } else {
-            System.out.println(this.averageUserRatingForCurrentVersion + " " + appData.averageUserRatingForCurrentVersion);
+            //System.out.println(this.averageUserRatingForCurrentVersion + " " + appData.averageUserRatingForCurrentVersion);
             return 0;
         }
 
