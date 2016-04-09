@@ -258,9 +258,9 @@ public class DataController {
         Statement statement;
         try {
             statement = dbController.connection.createStatement();
-            System.out.println("start fetch...");
+            System.out.println("start rate fetch...");
             rs = statement.executeQuery(selectSql);
-            System.out.println("end fetch!");
+            System.out.println("end rate fetch!");
 
             while (rs.next()) {
                 AppData appData = new AppData();

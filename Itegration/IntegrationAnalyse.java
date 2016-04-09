@@ -4,6 +4,7 @@ import Controller.DataController;
 import DataModel.RankingGroup;
 import Ranking.RankingAnalysis;
 import RateAmount.RateAmountAnalysis;
+import Rating.RatingAnalysis;
 import com.google.common.collect.Sets;
 
 import java.util.HashSet;
@@ -18,22 +19,25 @@ public class IntegrationAnalyse {
     public Set<Set<String>> groupSet = new HashSet<>();
     private RankingAnalysis rankingAnalysis;
     private RateAmountAnalysis rateAmountAnalysis;
+    private RatingAnalysis ratingAnalysis;
     private Map rankingGroupMap;
     private Map rateNumGroupMap;
     private DataController dataController;
+    private Map rateGroupMap;
 
     public IntegrationAnalyse() {
         dataController = new DataController();
         rankingAnalysis = new RankingAnalysis(dataController);
         rateAmountAnalysis = new RateAmountAnalysis(dataController);
+        rankingAnalysis = new RankingAnalysis(dataController);
     }
 
     public static void main(String args[]) {
         IntegrationAnalyse integrationAnalyse = new IntegrationAnalyse();
         //double rate = 0.5;
-        integrationAnalyse.getAllMaps(0.8, 0.5).integrateGroup();
+        integrationAnalyse.getAllMaps(0.8, 0.8, 0.8).integrateGroup();
         System.out.println("递归合并...");
-        integrationAnalyse.recursiveCombine(0.8);
+        integrationAnalyse.recursiveCombine(0.5);
         System.out.println("递归合并后group size大小: " + integrationAnalyse.getGroupSetSize());
         integrationAnalyse.filterData(20);
         System.out.println("过滤后group size大小: " + integrationAnalyse.getGroupSetSize());
@@ -46,7 +50,7 @@ public class IntegrationAnalyse {
         return groupSet.size();
     }
 
-    private IntegrationAnalyse getAllMaps(double rankRate, double rateNumRate) {
+    private IntegrationAnalyse getAllMaps(double rankRate, double rateNumRate, double ratingRate) {
         //获取排行榜指标数据
         rankingAnalysis.rankGroupMapGenerate();
         System.out.println("ranking group 合并前Group数: " + rankingAnalysis.rankGroupMap.size());
@@ -61,6 +65,10 @@ public class IntegrationAnalyse {
         rateAmountAnalysis.mapRecursiveCombine(rateNumRate);
         System.out.println("rate num group 合并后Group数: " + rateAmountAnalysis.rateNumGroupMap.size());
         this.rateNumGroupMap = rateAmountAnalysis.rateNumGroupMap;
+
+        ratingAnalysis.generateRecordMap();
+        ratingAnalysis.generateRatingGroup();
+
         return this;
     }
 
