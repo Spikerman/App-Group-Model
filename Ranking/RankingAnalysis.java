@@ -3,6 +3,7 @@ package Ranking;
 import Controller.DataController;
 import DataModel.AppData;
 import DataModel.RankingGroup;
+import ToolKit.Print;
 import com.google.common.collect.Sets;
 
 import java.util.*;
@@ -34,13 +35,7 @@ public class RankingAnalysis {
 
         System.out.println("合并后Group数: " + rankingAnalysis.rankGroupMap.size());
 
-        Iterator iterator = rankingAnalysis.getRankGroupMap().entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry entry = (Map.Entry) iterator.next();
-            RankingGroup group = (RankingGroup) entry.getValue();
-            System.out.println(group.getAppSize());
-        }
-        rankingAnalysis.generateExportDate();
+        Print.printEachGroupSize(rankingAnalysis.rankGroupMap);
     }
 
     public TreeMap<String, RankingGroup> getRankGroupMap() {

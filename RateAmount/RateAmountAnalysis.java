@@ -5,6 +5,7 @@ import DataModel.AppData;
 import DataModel.RankingGroup;
 import DataModel.RateAmountDiffRecord;
 import ToolKit.Combination;
+import ToolKit.Print;
 import com.google.common.collect.Sets;
 
 import java.util.*;
@@ -37,45 +38,29 @@ public class RateAmountAnalysis {
     public static void main(String args[]) {
         DataController dataController = new DataController();
         RateAmountAnalysis rateAmountAnalysis = new RateAmountAnalysis(dataController);
-
         rateAmountAnalysis.buildDiffRecordMap();
         rateAmountAnalysis.rateNumGroupMapGenerate();
-
         System.out.println("----------------------------------------------");
-
         System.out.println("合并前Group数: " + rateAmountAnalysis.rateNumGroupMap.size());
-
         double rate = 0.8;
-
         rateAmountAnalysis.mapRecursiveCombine(rate);
-
         System.out.println("合并后Group数" + rateAmountAnalysis.rateNumGroupMap.size());
-
         System.out.println("----------------------------------------------");
+        Print.printEachGroupSize(rateAmountAnalysis.rateNumGroupMap);
 
-//        Map map = rateAmountAnalysis.rateNumGroupMap;
-//        Set set = map.entrySet();
+//        Map metaMap = rateAmountAnalysis.appMetaDataMap;
+//        Set set = metaMap.entrySet();
 //        Iterator iterator = set.iterator();
+//        int count = 0;
 //        while (iterator.hasNext()) {
 //            Map.Entry entry = (Map.Entry) iterator.next();
-//            RankingGroup group = (RankingGroup) entry.getValue();
-//            System.out.println(group.getAppSize());
+//            AppData appData = (AppData) entry.getValue();
+//            if (appData.hasNumDecrease)
+//                count++;
 //        }
-
-        Map metaMap = rateAmountAnalysis.appMetaDataMap;
-        Set set = metaMap.entrySet();
-        Iterator iterator = set.iterator();
-        int count = 0;
-        while (iterator.hasNext()) {
-            Map.Entry entry = (Map.Entry) iterator.next();
-            AppData appData = (AppData) entry.getValue();
-            if (appData.hasNumDecrease)
-                count++;
-        }
-
-        System.out.println("app数" + set.size());
-        System.out.println("评论减少app数" + count);
-        rateAmountAnalysis.generateExportDate();
+//
+//        System.out.println("app数" + set.size());
+//        System.out.println("评论减少app数" + count);
     }
 
     //生成评论差值的hash map, key 是app Id, value是存储着每天差值记录rateAmountDiffRecord的集合
@@ -217,7 +202,7 @@ public class RateAmountAnalysis {
         for (Date date : shareDateSet) {
             RateAmountDiffRecord outerDiffRecord = outerMap.get(date);
             RateAmountDiffRecord innerDiffRecord = innerMap.get(date);
-            
+
             if ((outerDiffRecord.amountDiff > outerAppAvgDiffNum && innerDiffRecord.amountDiff > innerAppAvgDiffNum)
                     || (outerDiffRecord.amountDiff < outerAppAvgDiffNum && innerDiffRecord.amountDiff < innerAppAvgDiffNum
                     && outerDiffRecord.amountDiff > 0 && innerDiffRecord.amountDiff > 0))

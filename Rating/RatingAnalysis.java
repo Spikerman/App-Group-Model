@@ -4,6 +4,7 @@ import Controller.DataController;
 import DataModel.AppData;
 import DataModel.RankingGroup;
 import ToolKit.DateComparator;
+import ToolKit.Print;
 import com.google.common.collect.Sets;
 
 import java.util.*;
@@ -18,11 +19,11 @@ public class RatingAnalysis {
     private Map<String, List<AppData>> appDataMap;
     private Map<String, HashMap<Date, Double>> rateRecordMap = new HashMap<>();
 
-    public RatingAnalysis() {
-        DataController dataController = new DataController();
-        dataController = dataController.buildAppDataListForRatingFromDb().buildAppDataMapForRating();
-        appDataMap = dataController.getAppMapForRating();
-    }
+//    public RatingAnalysis() {
+//        DataController dataController = new DataController();
+//        dataController = dataController.buildAppDataListForRatingFromDb().buildAppDataMapForRating();
+//        appDataMap = dataController.getAppMapForRating();
+//    }
 
     public RatingAnalysis(DataController dataController) {
         this.dataController = dataController;
@@ -31,14 +32,15 @@ public class RatingAnalysis {
     }
 
     public static void main(String[] args) {
-        RatingAnalysis ratingAnalysis = new RatingAnalysis();
+        DataController dataController = new DataController();
+        RatingAnalysis ratingAnalysis = new RatingAnalysis(dataController);
         ratingAnalysis.startAnalyzing();
         System.out.println("递归合并前: rating group size: " + ratingAnalysis.ratingGroupMap.size());
-        double rate=0.8;
+        double rate = 0.8;
         ratingAnalysis.mapRecursiveCombine(rate);
         System.out.println("递归后并后: rating group size: " + ratingAnalysis.ratingGroupMap.size());
 
-
+        Print.printEachGroupSize(ratingAnalysis.ratingGroupMap);
     }
 
     public void buildDiffRecordMap() {
@@ -64,9 +66,9 @@ public class RatingAnalysis {
             rateRecordMap.put(appId, rateDiffRecordMap);
         }
 
-        System.out.println("--------------------------------");
-        System.out.println("有评分变化的APP数" + rateRecordMap.size());
-        System.out.println("--------------------------------");
+//        System.out.println("--------------------------------");
+//        System.out.println("有评分变化的APP数" + rateRecordMap.size());
+//        System.out.println("--------------------------------");
     }
 
     public void makeGroup(HashMap<Date, Double> outerMap, String outerAppId,

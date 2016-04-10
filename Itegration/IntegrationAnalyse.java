@@ -40,7 +40,7 @@ public class IntegrationAnalyse {
         System.out.println("递归合并...");
         integrationAnalyse.recursiveCombine(0.8);
         System.out.println("递归合并后group size大小: " + integrationAnalyse.getGroupSetSize());
-        integrationAnalyse.filterData(20);
+        integrationAnalyse.filterData(30);
         System.out.println("过滤后group size大小: " + integrationAnalyse.getGroupSetSize());
         System.out.println("------------------------------------------");
         integrationAnalyse.printEachGroupSize();
@@ -53,13 +53,13 @@ public class IntegrationAnalyse {
 
     private IntegrationAnalyse getAllMaps(double rankRate, double rateNumRate, double ratingRate) {
 
-//        //获取评分榜指标数据
-//        ratingAnalysis.buildDiffRecordMap();
-//        ratingAnalysis.ratingGroupMapGenerate();
-//        System.out.println("rating group 合并前Group数: " + ratingAnalysis.ratingGroupMap.size());
-//        ratingAnalysis.mapRecursiveCombine(ratingRate);
-//        System.out.println("rating group 合并后Group数: " + ratingAnalysis.ratingGroupMap.size());
-//        this.ratingGroupMap = ratingAnalysis.ratingGroupMap;
+        //获取评分榜指标数据
+        ratingAnalysis.buildDiffRecordMap();
+        ratingAnalysis.ratingGroupMapGenerate();
+        System.out.println("rating group 合并前Group数: " + ratingAnalysis.ratingGroupMap.size());
+        ratingAnalysis.mapRecursiveCombine(ratingRate);
+        System.out.println("rating group 合并后Group数: " + ratingAnalysis.ratingGroupMap.size());
+        this.ratingGroupMap = ratingAnalysis.ratingGroupMap;
 
 
         //获取排行榜指标数据
@@ -127,7 +127,7 @@ public class IntegrationAnalyse {
     public IntegrationAnalyse integrateGroup2() {
         Iterator rankIterator = rankingGroupMap.entrySet().iterator();
         Iterator rateNumIterator = rateNumGroupMap.entrySet().iterator();
-//        Iterator ratingIterator = ratingGroupMap.entrySet().iterator();
+        Iterator ratingIterator = ratingGroupMap.entrySet().iterator();
         while (rankIterator.hasNext()) {
             Map.Entry entry = (Map.Entry) rankIterator.next();
             RankingGroup group = (RankingGroup) entry.getValue();
@@ -140,11 +140,11 @@ public class IntegrationAnalyse {
             groupSet.add(group.getAppIdSet());
         }
 
-//        while (ratingIterator.hasNext()) {
-//            Map.Entry entry = (Map.Entry) ratingIterator.next();
-//            RankingGroup group = (RankingGroup) entry.getValue();
-//            groupSet.add(group.getAppIdSet());
-//        }
+        while (ratingIterator.hasNext()) {
+            Map.Entry entry = (Map.Entry) ratingIterator.next();
+            RankingGroup group = (RankingGroup) entry.getValue();
+            groupSet.add(group.getAppIdSet());
+        }
 
         System.out.println("递归合并前的 group size: " + groupSet.size());
         return this;

@@ -13,9 +13,8 @@ import java.util.*;
  */
 public class DataController {
 
-    public static final int RANK_MIN_NUM = 5;
-    //APP被持续监测的最少天数
-    public static final int RATE_NUM_MIN_NUM = 5;
+    public static final int RANK_MIN_NUM = 8;
+    public static final int RATE_NUM_MIN_NUM = 15;
     public static final int RATING_MIN_NUM = 5;
 
     private DbController dbController = new DbController();
@@ -26,9 +25,9 @@ public class DataController {
     private Map<Date, Set<String>> paidUpMap = new TreeMap<>();
     private Map<Date, Set<String>> freeDownMap = new TreeMap<>();
     private Map<Date, Set<String>> paidDownMap = new TreeMap<>();
-    private Map<String, List<AppData>> appMapForRank = new TreeMap<>();
-    private Map<String, List<AppData>> appMapForRating = new TreeMap<>();
-    private Map<String, List<AppData>> appMapForRateNum = new TreeMap<>();
+    private Map<String, List<AppData>> appMapForRank = new HashMap<>();
+    private Map<String, List<AppData>> appMapForRating = new HashMap<>();
+    private Map<String, List<AppData>> appMapForRateNum = new HashMap<>();
     private Map<String, AppData> appMetaDataMapForRateNum = new HashMap<>();
 
     public DataController() {
