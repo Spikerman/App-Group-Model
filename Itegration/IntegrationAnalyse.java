@@ -24,7 +24,6 @@ public class IntegrationAnalyse {
     private Map rateNumGroupMap;
     private Map ratingGroupMap;
     private DataController dataController;
-    private Map rateGroupMap;
 
     public IntegrationAnalyse() {
         dataController = new DataController();
@@ -45,6 +44,7 @@ public class IntegrationAnalyse {
         System.out.println("------------------------------------------");
         integrationAnalyse.printEachGroupSize();
 
+        integrationAnalyse.exportGroupData();
     }
 
     public int getGroupSetSize() {
@@ -194,5 +194,25 @@ public class IntegrationAnalyse {
         double unionSize = unionSet.size();
         double intersectionSize = intersectionSet.size();
         return (intersectionSize / unionSize) >= rate;
+    }
+
+    public void exportGroupData() {
+        System.out.println("------------------------");
+        System.out.println("Start to export...");
+        Iterator groupIterator = groupSet.iterator();
+        Iterator appIdIterator;
+        int groupNum = 0;
+        while (groupIterator.hasNext()) {
+            Set<String> idSet = (Set<String>) groupIterator.next();
+            appIdIterator = idSet.iterator();
+            while (appIdIterator.hasNext()) {
+                String appId = (String) appIdIterator.next();
+
+                System.out.println(groupNum + "  " + appId);
+
+                dataController.exportAppGroupToDb(groupNum, appId);
+            }
+            groupNum++;
+        }
     }
 }

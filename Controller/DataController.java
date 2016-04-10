@@ -34,6 +34,8 @@ public class DataController {
         //initial the rank query statement
         dbController.setRankNumQueryStmt(DbController.rankQuerySql);
         dbController.setInsertRateNumTestStmt(DbController.insertTestSql);
+        dbController.setInsertAppGroupStmt(DbController.insertAppGroupSql);
+
     }
 
     public static void main(String args[]) {
@@ -117,8 +119,8 @@ public class DataController {
         ResultSet rs;
         List<AppData> list = new LinkedList<>();
         try {
-            dbController.rankNumQueryState.setString(1, appId);
-            rs = dbController.rankNumQueryState.executeQuery();
+            dbController.rankNumQueryStmt.setString(1, appId);
+            rs = dbController.rankNumQueryStmt.executeQuery();
             while (rs.next()) {
                 AppData appData = new AppData();
                 appData.appId = rs.getString("appId");
@@ -146,6 +148,16 @@ public class DataController {
             dbController.insertRateNumTestStmt.setDouble(6, avgB);
             dbController.insertRateNumTestStmt.setDouble(7, avgC);
             dbController.insertRateNumTestStmt.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void exportAppGroupToDb(int groupId, String appId) {
+        try {
+            dbController.insertAppGroupStmt.setInt(1, groupId);
+            dbController.insertAppGroupStmt.setString(2, appId);
+            dbController.insertAppGroupStmt.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -251,6 +263,7 @@ public class DataController {
         return this;
     }
 
+
     public DataController buildAppDataListForRatingFromDb() {
         String selectSql = "SELECT * FROM AppInfo Where rankType ='update'";
         ResultSet rs;
@@ -290,6 +303,7 @@ public class DataController {
                 appMapForRank.put(appData.appId, newList);
             }
         }
+        System.out.println("rank app数: " + appMapForRank.size());
 
         Iterator iterator = appMapForRank.entrySet().iterator();
         while (iterator.hasNext()) {
@@ -298,6 +312,8 @@ public class DataController {
             if (appDataList.size() < RANK_MIN_NUM)
                 iterator.remove();
         }
+
+        System.out.println("符合条件的数量: " + appMapForRank.size());
 
         return this;
     }

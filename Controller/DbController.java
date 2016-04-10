@@ -14,9 +14,12 @@ public class DbController {
     public static final String password = "root";
     public static final String rankQuerySql = "select appId,rankType,currentVersion,currentVersionReleaseDate,userRatingCountForCurrentVersion,userRatingCount,date from Data.AppInfo where rankType='update' and appId=? order by date";
     public static final String insertTestSql = "insert into Data.RateNumTest (date,appA,appB,appC,avgA,avgB,avgC) values (?,?,?,?,?,?,?)";
+    public static final String insertAppGroupSql = "insert into Data.AppGroup (groupId,appId) values (?,?)";
     public Connection connection = null;
-    public PreparedStatement rankNumQueryState = null;
-    public PreparedStatement insertRateNumTestStmt=null;
+    public PreparedStatement rankNumQueryStmt = null;
+    public PreparedStatement insertRateNumTestStmt = null;
+    public PreparedStatement insertAppGroupStmt = null;
+
     public DbController() {
         try {
             Class.forName(name);
@@ -35,22 +38,27 @@ public class DbController {
 
     public void setRankNumQueryStmt(String sql) {
         try {
-            rankNumQueryState = connection.prepareStatement(sql);
+            rankNumQueryStmt = connection.prepareStatement(sql);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public void setInsertRateNumTestStmt(String sql){
-        try{
-            insertRateNumTestStmt=connection.prepareStatement(sql);
-        }catch(Exception e){
+    public void setInsertRateNumTestStmt(String sql) {
+        try {
+            insertRateNumTestStmt = connection.prepareStatement(sql);
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-
-
+    public void setInsertAppGroupStmt(String sql) {
+        try {
+            insertAppGroupStmt = connection.prepareStatement(sql);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
 
 }

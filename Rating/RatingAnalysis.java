@@ -45,9 +45,6 @@ public class RatingAnalysis {
 
     public void buildDiffRecordMap() {
         Iterator iterator = appDataMap.entrySet().iterator();
-
-        System.out.println("收集的APP总数" + appDataMap.size());
-
         DateComparator dateComparator = new DateComparator();
         while (iterator.hasNext()) {
             Map.Entry entry = (Map.Entry) iterator.next();
