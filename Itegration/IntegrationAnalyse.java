@@ -27,6 +27,8 @@ public class IntegrationAnalyse {
 
     public IntegrationAnalyse() {
         dataController = new DataController();
+
+        //ranking 必须第一个构造,创建rankAppPool
         rankingAnalysis = new RankingAnalysis(dataController);
         rateAmountAnalysis = new RateAmountAnalysis(dataController);
         ratingAnalysis = new RatingAnalysis(dataController);
@@ -43,7 +45,6 @@ public class IntegrationAnalyse {
         System.out.println("过滤后group size大小: " + integrationAnalyse.getGroupSetSize());
         System.out.println("------------------------------------------");
         integrationAnalyse.printEachGroupSize();
-
         integrationAnalyse.exportGroupData();
     }
 

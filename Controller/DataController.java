@@ -13,9 +13,9 @@ import java.util.*;
  */
 public class DataController {
 
-    public static final int RANK_MIN_NUM = 8;
-    public static final int RATE_NUM_MIN_NUM = 15;
-    public static final int RATING_MIN_NUM = 5;
+    public static final int RANK_MIN_NUM = 10;
+    public static final int RATE_NUM_MIN_NUM = 20;
+    public static final int RATING_MIN_NUM = 8;
 
     private DbController dbController = new DbController();
     private List<AppData> appDataRecordListForRank = new LinkedList<>();
@@ -29,6 +29,7 @@ public class DataController {
     private Map<String, List<AppData>> appMapForRating = new HashMap<>();
     private Map<String, List<AppData>> appMapForRateNum = new HashMap<>();
     private Map<String, AppData> appMetaDataMapForRateNum = new HashMap<>();
+    private Set<String> rankAppIdPool = new HashSet<>();
 
     public DataController() {
         //initial the rank query statement
@@ -99,6 +100,7 @@ public class DataController {
             while (rs.next()) {
                 AppData appData = new AppData();
                 appData.appId = rs.getString("appId");
+                rankAppIdPool.add(appData.appId);
                 appData.rankType = rs.getString("rankType");
                 appData.ranking = rs.getInt("ranking");
                 appData.rankFloatNum = rs.getInt("rankFloatNum");
@@ -183,8 +185,10 @@ public class DataController {
                 appData.userRateCountForCur = rs.getInt("userRatingCountForCurrentVersion");
                 appData.userTotalRateCount = rs.getInt("userRatingCount");
                 appData.date = DateFormat.timestampToMonthDayYear(rs.getTimestamp("date"));
-                appDataRecordListForRateNum.add(appData);
-                addMetaDataToApp(appData.appId);
+                if (rankAppIdPool.contains(appData.appId)) {
+                    appDataRecordListForRateNum.add(appData);
+                    addMetaDataToApp(appData.appId);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -283,7 +287,9 @@ public class DataController {
                 appData.averageUserRating = Double.parseDouble(rs.getString("averageUserRating"));
                 appData.averageUserRatingForCurrentVersion = Double.parseDouble(rs.getString("averageUserRatingForCurrentVersion"));
                 appData.date = DateFormat.timestampToMonthDayYear(rs.getTimestamp("date"));
-                appDataRecordListForRating.add(appData);
+                if (rankAppIdPool.contains(appData.appId)) {
+                    appDataRecordListForRating.add(appData);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -313,8 +319,7 @@ public class DataController {
                 iterator.remove();
         }
 
-        System.out.println("符合条件的数量: " + appMapForRank.size());
-
+        System.out.println("符合rank条件的数量: " + appMapForRank.size());
         return this;
     }
 
