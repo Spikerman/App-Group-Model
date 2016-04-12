@@ -4,6 +4,7 @@ import Controller.DataController;
 import DataModel.AppData;
 import DataModel.RankingGroup;
 import ToolKit.DateComparator;
+import ToolKit.DateFormat;
 import ToolKit.Print;
 import com.google.common.collect.Sets;
 
@@ -14,8 +15,8 @@ import java.util.*;
  */
 public class RatingAnalysis {
     public Map<String, RankingGroup> ratingGroupMap = new HashMap<>();
+    public int adjustDayDiff = 3;
     private DataController dataController;
-
     private Map<String, List<AppData>> appDataMap;
     private Map<String, HashMap<Date, Double>> rateRecordMap = new HashMap<>();
 
@@ -39,7 +40,6 @@ public class RatingAnalysis {
         double rate = 0.8;
         ratingAnalysis.mapRecursiveCombine(rate);
         System.out.println("递归后并后: rating group size: " + ratingAnalysis.ratingGroupMap.size());
-
         Print.printEachGroupSize(ratingAnalysis.ratingGroupMap);
     }
 
@@ -53,11 +53,11 @@ public class RatingAnalysis {
             Collections.sort(appList, dateComparator);
             HashMap<Date, Double> rateDiffRecordMap = new HashMap<>();
             for (int i = 1; i < appList.size(); i++) {
-                AppData preDayAppData = appList.get(i);
+                AppData nextDayAppData = appList.get(i);
                 AppData curDayAppData = appList.get(i - 1);
-                double rateDiff = preDayAppData.getRateDiff(curDayAppData);
+                double rateDiff = nextDayAppData.getRateDiff(curDayAppData);
                 if (rateDiff != 0)
-                    rateDiffRecordMap.put(preDayAppData.date, rateDiff);
+                    rateDiffRecordMap.put(nextDayAppData.date, rateDiff);
             }
             //System.out.println(appId + " " + rateDiffRecordMap.size());
             rateRecordMap.put(appId, rateDiffRecordMap);
@@ -68,28 +68,27 @@ public class RatingAnalysis {
 //        System.out.println("--------------------------------");
     }
 
-    public void makeGroup(HashMap<Date, Double> outerMap, String outerAppId,
-                          HashMap<Date, Double> innerMap, String innerAppId) {
+    private void makeGroup(HashMap<Date, Double> outerMap, String outerAppId,
+                           HashMap<Date, Double> innerMap, String innerAppId) {
 
         Set<Date> outerDateSet = outerMap.keySet();
         Set<Date> innerDateSet = innerMap.keySet();
-
         Set<Date> shareDateSet = (Set) Sets.intersection(outerDateSet, innerDateSet);
-
         Set<Date> commonDateSet = new HashSet<>();
         int duplicateCount = 0;
         for (Date date : shareDateSet) {
             Double outerRateDiff = outerMap.get(date);
             Double innerRateDiff = innerMap.get(date);
-
-            if ((outerRateDiff > 0 && innerRateDiff > 0)
-                    || (outerRateDiff < 0 && innerRateDiff < 0)) {
+            //相同日起时,两个APP的变化趋势相同
+            if (outerRateDiff * innerRateDiff > 0) {
                 duplicateCount++;
                 commonDateSet.add(date);
+            } else {
+                duplicateCount += approxEquals(outerMap, innerMap, date);
             }
         }
 
-        if (duplicateCount >= 3) {
+        if (duplicateCount >= DataController.RATING_MIN_NUM) {
             if (ratingGroupMap.containsKey(outerAppId)) {
                 RankingGroup ratingGroup = ratingGroupMap.get(outerAppId);
                 ratingGroup.getAppIdSet().add(innerAppId);
@@ -102,6 +101,23 @@ public class RatingAnalysis {
                 ratingGroupMap.put(outerAppId, newGroup);
             }
         }
+    }
+
+    private int approxEquals(HashMap<Date, Double> outerMap, HashMap<Date, Double> innerMap, Date date) {
+        Double outerRateDiff;
+        Double innerRateDiff;
+        Double innerRateDiff2;
+        int count = 0;
+        for (int i = 1; i < adjustDayDiff; i++) {
+            outerRateDiff = outerMap.get(date);
+            innerRateDiff = innerMap.get(DateFormat.adjustDay(date, i));
+            innerRateDiff2 = innerMap.get(DateFormat.adjustDay(date, -i));
+            if ((innerRateDiff != null && innerRateDiff * outerRateDiff > 0)
+                    || innerRateDiff2 != null && innerRateDiff2 * outerRateDiff > 0) {
+                return ++count;
+            }
+        }
+        return count;
     }
 
     public void ratingGroupMapGenerate() {
@@ -124,7 +140,7 @@ public class RatingAnalysis {
         }
     }
 
-    public void startAnalyzing() {
+    private void startAnalyzing() {
         buildDiffRecordMap();
         ratingGroupMapGenerate();
     }

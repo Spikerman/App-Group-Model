@@ -11,6 +11,7 @@ import java.util.*;
 /**
  * Created by chenhao on 3/27/16.
  */
+
 public class RankingAnalysis {
     public TreeMap<String, RankingGroup> rankGroupMap = new TreeMap<>();
     private DataController dataController;
@@ -29,12 +30,9 @@ public class RankingAnalysis {
         RankingAnalysis rankingAnalysis = new RankingAnalysis(dataController);
         rankingAnalysis.rankGroupMapGenerate();
         System.out.println("合并前Group数: " + rankingAnalysis.rankGroupMap.size());
-
         double rate = 0.8;
         rankingAnalysis.mapRecursiveCombine(rate);
-
         System.out.println("合并后Group数: " + rankingAnalysis.rankGroupMap.size());
-
         Print.printEachGroupSize(rankingAnalysis.rankGroupMap);
     }
 

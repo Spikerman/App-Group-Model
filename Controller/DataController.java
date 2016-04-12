@@ -15,7 +15,7 @@ public class DataController {
 
     public static final int RANK_MIN_NUM = 10;
     public static final int RATE_NUM_MIN_NUM = 20;
-    public static final int RATING_MIN_NUM = 8;
+    public static final int RATING_MIN_NUM = 5;
 
     private DbController dbController = new DbController();
     private List<AppData> appDataRecordListForRank = new LinkedList<>();
@@ -36,7 +36,6 @@ public class DataController {
         dbController.setRankNumQueryStmt(DbController.rankQuerySql);
         dbController.setInsertRateNumTestStmt(DbController.insertTestSql);
         dbController.setInsertAppGroupStmt(DbController.insertAppGroupSql);
-
     }
 
     public static void main(String args[]) {
@@ -336,18 +335,18 @@ public class DataController {
         }
 
         //若持续监测天数小于最小监测天数值,则从List中剔除该项
-        Iterator iterator = appMapForRateNum.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry entry = (Map.Entry) iterator.next();
-            String appId = (String) entry.getKey();
-
-            List appDataList = (List) entry.getValue();
-            if (appDataList.size() < RATE_NUM_MIN_NUM) {
-                iterator.remove();
-                appMetaDataMapForRateNum.remove(appId);
-
-            }
-        }
+//        Iterator iterator = appMapForRateNum.entrySet().iterator();
+//        while (iterator.hasNext()) {
+//            Map.Entry entry = (Map.Entry) iterator.next();
+//            String appId = (String) entry.getKey();
+//
+//            List appDataList = (List) entry.getValue();
+//            if (appDataList.size() < RATE_NUM_MIN_NUM) {
+//                iterator.remove();
+//                appMetaDataMapForRateNum.remove(appId);
+//
+//            }
+//        }
 
         return this;
     }
@@ -363,13 +362,13 @@ public class DataController {
             }
         }
 
-        Iterator iterator = appMapForRating.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry entry = (Map.Entry) iterator.next();
-            List appDataList = (List) entry.getValue();
-            if (appDataList.size() < RATING_MIN_NUM)
-                iterator.remove();
-        }
+//        Iterator iterator = appMapForRating.entrySet().iterator();
+//        while (iterator.hasNext()) {
+//            Map.Entry entry = (Map.Entry) iterator.next();
+//            List appDataList = (List) entry.getValue();
+//            if (appDataList.size() < RATING_MIN_NUM)
+//                iterator.remove();
+//        }
         return this;
     }
 }

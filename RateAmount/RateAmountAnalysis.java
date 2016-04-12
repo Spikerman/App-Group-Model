@@ -61,6 +61,8 @@ public class RateAmountAnalysis {
 //
 //        System.out.println("app数" + set.size());
 //        System.out.println("评论减少app数" + count);
+
+
     }
 
     //生成评论差值的hash map, key 是app Id, value是存储着每天差值记录rateAmountDiffRecord的集合

@@ -36,12 +36,11 @@ public class IntegrationAnalyse {
 
     public static void main(String args[]) {
         IntegrationAnalyse integrationAnalyse = new IntegrationAnalyse();
-
-        integrationAnalyse.getAllMaps(0.8, 0.8, 0.8).integrateGroup2();
+        integrationAnalyse.getAllMaps(0.6, 0.6, 0.6).integrateGroup2();
         System.out.println("递归合并...");
-        integrationAnalyse.recursiveCombine(0.8);
+        integrationAnalyse.recursiveCombine(0.6);
         System.out.println("递归合并后group size大小: " + integrationAnalyse.getGroupSetSize());
-        integrationAnalyse.filterData(30);
+        integrationAnalyse.filterData(20);
         System.out.println("过滤后group size大小: " + integrationAnalyse.getGroupSetSize());
         System.out.println("------------------------------------------");
         integrationAnalyse.printEachGroupSize();
@@ -125,6 +124,7 @@ public class IntegrationAnalyse {
         return this;
     }
 
+    //// TODO: 4/12/16 改进合并方式,现在的合并方式只是任意量量合并
     public IntegrationAnalyse integrateGroup2() {
         Iterator rankIterator = rankingGroupMap.entrySet().iterator();
         Iterator rateNumIterator = rateNumGroupMap.entrySet().iterator();
