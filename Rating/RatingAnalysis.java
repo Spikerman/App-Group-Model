@@ -188,10 +188,15 @@ public class RatingAnalysis {
                 if (outerRatingGroup.getAppIdSet().containsAll(innerRatingGroup.getAppIdSet())
                         || innerRatingGroup.getAppIdSet().containsAll(outerRatingGroup.getAppIdSet())
                         || enableCombine(innerRatingGroup.getAppIdSet(), outerRatingGroup.getAppIdSet(), rate)) {
-                    if (outerGroupSize > innerGroupSize)
+
+                    //// TODO: 4/12/16 remove方式不对
+                    if (outerGroupSize > innerGroupSize) {
+                        ratingGroupMap.get(outerId).getAppIdSet().addAll(ratingGroupMap.get(innerId).getAppIdSet());
                         ratingGroupMap.remove(innerId);
-                    else
+                    } else {
+                        ratingGroupMap.get(innerId).getAppIdSet().addAll(ratingGroupMap.get(outerId).getAppIdSet());
                         ratingGroupMap.remove(outerId);
+                    }
                     hasDuplicateSet = true;
                 }
             }

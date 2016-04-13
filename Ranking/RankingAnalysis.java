@@ -30,8 +30,8 @@ public class RankingAnalysis {
         RankingAnalysis rankingAnalysis = new RankingAnalysis(dataController);
         rankingAnalysis.rankGroupMapGenerate();
         System.out.println("合并前Group数: " + rankingAnalysis.rankGroupMap.size());
-        double rate = 0.8;
-        rankingAnalysis.mapRecursiveCombine(rate);
+        double rate = 0.6;
+        rankingAnalysis.mapRecursiveCombine(rate,rankingAnalysis.rankGroupMap);
         System.out.println("合并后Group数: " + rankingAnalysis.rankGroupMap.size());
         Print.printEachGroupSize(rankingAnalysis.rankGroupMap);
     }
@@ -473,7 +473,7 @@ public class RankingAnalysis {
     public void rankGroupMapGenerate() {
         Map appRankMap = dataController.getAppMapForRank();
         Object[] outerAppRankArray = appRankMap.entrySet().toArray();
-        Object[] innerAppRankArray = appRankMap.entrySet().toArray();
+        Object[] innerAppRankArray = outerAppRankArray.clone();
 
         for (int i = 0; i < outerAppRankArray.length; i++) {
             for (int j = i + 1; j < innerAppRankArray.length; j++) {
@@ -494,35 +494,105 @@ public class RankingAnalysis {
     public void mapRecursiveCombine(double rate) {
 
         boolean hasDuplicateSet = false;
-        Object[] outerRankGroupArray = rankGroupMap.entrySet().toArray().clone();
-        Object[] innerRankGroupArray = rankGroupMap.entrySet().toArray().clone();
+        //Object[] outerRankGroupArray = rankGroupMap.entrySet().toArray();
+        //Object[] innerRankGroupArray = rankGroupMap.entrySet().toArray();
+        Object[] outerIdSet = rankGroupMap.keySet().toArray();
+        Object[] innerIdSet = rankGroupMap.keySet().toArray();
 
-        for (int i = 0; i < outerRankGroupArray.length; i++) {
-            for (int j = i + 1; j < innerRankGroupArray.length; j++) {
+        for (int i = 0; i < outerIdSet.length; i++) {
+            for (int j = i + 1; j < innerIdSet.length; j++) {
 
-                Map.Entry outerEntry = (Map.Entry) outerRankGroupArray[i];
-                Map.Entry innerEntry = (Map.Entry) innerRankGroupArray[j];
+                // Map.Entry outerEntry = (Map.Entry) outerRankGroupArray[i];
+                // Map.Entry innerEntry = (Map.Entry) innerRankGroupArray[j];
 
-                String outerId = outerEntry.getKey().toString();
-                String innerId = innerEntry.getKey().toString();
+                // String outerId = outerEntry.getKey().toString();
+                // String innerId = innerEntry.getKey().toString();
 
-                RankingGroup outerRankingGroup = (RankingGroup) outerEntry.getValue();
-                RankingGroup innerRankingGroup = (RankingGroup) innerEntry.getValue();
+                String outerId = outerIdSet[i].toString();
+                String innerId = innerIdSet[j].toString();
 
-                int outerGroupSize = outerRankingGroup.getAppSize();
-                int innerGroupSize = innerRankingGroup.getAppSize();
+                //RankingGroup outerRankingGroup = (RankingGroup) outerEntry.getValue();
+                // RankingGroup innerRankingGroup = (RankingGroup) innerEntry.getValue();
 
-                if (outerRankingGroup.getAppIdSet().containsAll(innerRankingGroup.getAppIdSet())
-                        || innerRankingGroup.getAppIdSet().containsAll(outerRankingGroup.getAppIdSet())
-                        || enableCombine(innerRankingGroup.getAppIdSet(), outerRankingGroup.getAppIdSet(), rate)) {
-                    if (outerGroupSize > innerGroupSize)
-                        rankGroupMap.remove(innerId);
-                    else
-                        rankGroupMap.remove(outerId);
-                    hasDuplicateSet = true;
+                Set<String> outerSet;
+                Set<String> innerSet;
+                if (rankGroupMap.containsKey(outerId) && rankGroupMap.containsKey(innerId)) {
+                    outerSet = rankGroupMap.get(outerId).getAppIdSet();
+                    innerSet = rankGroupMap.get(innerId).getAppIdSet();
+
+//                if (outerSet == null || innerSet == null)
+//                    continue;
+
+                    //int outerGroupSize = outerRankingGroup.getAppSize();
+                    //int innerGroupSize = innerRankingGroup.getAppSize();
+
+                    int outerGroupSize = outerSet.size();
+                    int innerGroupSize = innerSet.size();
+
+//                if (outerRankingGroup.getAppIdSet().containsAll(innerRankingGroup.getAppIdSet())
+//                        || innerRankingGroup.getAppIdSet().containsAll(outerRankingGroup.getAppIdSet())
+//                        || enableCombine(innerRankingGroup.getAppIdSet(), outerRankingGroup.getAppIdSet(), rate))
+                    if (outerSet.containsAll(innerSet)
+                            || innerSet.containsAll(outerSet)
+                            || enableCombine(innerSet, outerSet, rate)) {
+                        if (outerGroupSize > innerGroupSize) {
+                            //if (rankGroupMap.get(innerId) != null && rankGroupMap.get(outerId) != null)
+                            //rankGroupMap.get(outerId).getAppIdSet().addAll(rankGroupMap.get(innerId).getAppIdSet());
+                            outerSet.addAll(innerSet);
+                            rankGroupMap.remove(innerId);
+
+                        } else {
+                            //if (rankGroupMap.get(outerId) != null && rankGroupMap.get(innerId) != null)
+                            //rankGroupMap.get(innerId).getAppIdSet().addAll(rankGroupMap.get(outerId).getAppIdSet());
+                            innerSet.addAll(outerSet);
+                            rankGroupMap.remove(outerId);
+                        }
+                        hasDuplicateSet = true;
+                    }
                 }
             }
         }
+
+        if (hasDuplicateSet)
+            mapRecursiveCombine(rate);
+    }
+
+    public void mapRecursiveCombine(double rate,Map<String,RankingGroup> groupMap){
+        boolean hasDuplicateSet = false;
+        Object[] outerIdSet = groupMap.keySet().toArray();
+        Object[] innerIdSet = groupMap.keySet().toArray();
+
+        for (int i = 0; i < outerIdSet.length; i++) {
+            for (int j = i + 1; j < innerIdSet.length; j++) {
+                String outerId = outerIdSet[i].toString();
+                String innerId = innerIdSet[j].toString();
+
+                Set<String> outerSet;
+                Set<String> innerSet;
+                if (groupMap.containsKey(outerId) && groupMap.containsKey(innerId)) {
+                    outerSet = groupMap.get(outerId).getAppIdSet();
+                    innerSet = groupMap.get(innerId).getAppIdSet();
+
+                    int outerGroupSize = outerSet.size();
+                    int innerGroupSize = innerSet.size();
+
+                    if (outerSet.containsAll(innerSet)
+                            || innerSet.containsAll(outerSet)
+                            || enableCombine(innerSet, outerSet, rate)) {
+                        if (outerGroupSize > innerGroupSize) {
+                            outerSet.addAll(innerSet);
+                            groupMap.remove(innerId);
+
+                        } else {
+                            innerSet.addAll(outerSet);
+                            groupMap.remove(outerId);
+                        }
+                        hasDuplicateSet = true;
+                    }
+                }
+            }
+        }
+
         if (hasDuplicateSet)
             mapRecursiveCombine(rate);
     }

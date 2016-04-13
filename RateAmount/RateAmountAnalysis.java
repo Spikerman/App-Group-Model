@@ -42,7 +42,7 @@ public class RateAmountAnalysis {
         rateAmountAnalysis.rateNumGroupMapGenerate();
         System.out.println("----------------------------------------------");
         System.out.println("合并前Group数: " + rateAmountAnalysis.rateNumGroupMap.size());
-        double rate = 0.8;
+        double rate = 0.6;
         rateAmountAnalysis.mapRecursiveCombine(rate);
         System.out.println("合并后Group数" + rateAmountAnalysis.rateNumGroupMap.size());
         System.out.println("----------------------------------------------");
@@ -250,6 +250,7 @@ public class RateAmountAnalysis {
                         || innerRankingGroup.getAppIdSet().containsAll(outerRankingGroup.getAppIdSet())
                         || enableCombine(innerRankingGroup.getAppIdSet(), outerRankingGroup.getAppIdSet(), rate)) {
 
+                    //// TODO: 4/12/16 直接remove方式不对,应该采用取交集或者去并集的方式
                     if (outerGroupSize > innerGroupSize)
                         rateNumGroupMap.remove(innerId);
                     else
