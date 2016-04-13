@@ -36,9 +36,9 @@ public class IntegrationAnalyse {
 
     public static void main(String args[]) {
         IntegrationAnalyse integrationAnalyse = new IntegrationAnalyse();
-        integrationAnalyse.getAllMaps(0.6, 0.6, 0.6).integrateGroup2();
+        integrationAnalyse.getAllMaps(0.8, 0.8, 0.8).integrateGroup();
         System.out.println("递归合并...");
-        integrationAnalyse.recursiveCombine(0.6);
+        integrationAnalyse.recursiveCombine(0.8);
         System.out.println("递归合并后group size大小: " + integrationAnalyse.getGroupSetSize());
         integrationAnalyse.filterData(20);
         System.out.println("过滤后group size大小: " + integrationAnalyse.getGroupSetSize());
@@ -57,7 +57,7 @@ public class IntegrationAnalyse {
         ratingAnalysis.buildDiffRecordMap();
         ratingAnalysis.ratingGroupMapGenerate();
         System.out.println("rating group 合并前Group数: " + ratingAnalysis.ratingGroupMap.size());
-        ratingAnalysis.mapRecursiveCombine(ratingRate);
+        ratingAnalysis.mapRecursiveCombine(ratingRate, ratingAnalysis.ratingGroupMap);
         System.out.println("rating group 合并后Group数: " + ratingAnalysis.ratingGroupMap.size());
         this.ratingGroupMap = ratingAnalysis.ratingGroupMap;
 
@@ -65,7 +65,7 @@ public class IntegrationAnalyse {
         //获取排行榜指标数据
         rankingAnalysis.rankGroupMapGenerate();
         System.out.println("ranking group 合并前Group数: " + rankingAnalysis.rankGroupMap.size());
-        rankingAnalysis.mapRecursiveCombine(rankRate);
+        rankingAnalysis.mapRecursiveCombine(rankRate, rankingAnalysis.rankGroupMap);
         System.out.println("ranking group 合并后Group数: " + rankingAnalysis.rankGroupMap.size());
         this.rankingGroupMap = rankingAnalysis.rankGroupMap;
 
@@ -74,7 +74,7 @@ public class IntegrationAnalyse {
         rateAmountAnalysis.buildDiffRecordMap();
         rateAmountAnalysis.rateNumGroupMapGenerate();
         System.out.println("rate num group 合并前Group数: " + rateAmountAnalysis.rateNumGroupMap.size());
-        rateAmountAnalysis.mapRecursiveCombine(rateNumRate);
+        rateAmountAnalysis.mapRecursiveCombine(rateNumRate, rateAmountAnalysis.rateNumGroupMap);
         System.out.println("rate num group 合并后Group数: " + rateAmountAnalysis.rateNumGroupMap.size());
         this.rateNumGroupMap = rateAmountAnalysis.rateNumGroupMap;
         return this;
@@ -87,7 +87,7 @@ public class IntegrationAnalyse {
     }
 
     //对三个指标计算出的APP Group进行组合计算
-    public IntegrationAnalyse integrateGroup(double rate) {
+    public IntegrationAnalyse integrateGroup2(double rate) {
         Object[] rankArray = rankingGroupMap.entrySet().toArray();
         Object[] rateNumArray = rateNumGroupMap.entrySet().toArray();
         for (int i = 0; i < rankArray.length; i++) {
@@ -107,7 +107,7 @@ public class IntegrationAnalyse {
         return this;
     }
 
-    public IntegrationAnalyse integrateGroup() {
+    public IntegrationAnalyse integrateGroup2() {
         Object[] rankArray = rankingGroupMap.entrySet().toArray();
         Object[] rateNumArray = rateNumGroupMap.entrySet().toArray();
         for (int i = 0; i < rankArray.length; i++) {
@@ -125,7 +125,7 @@ public class IntegrationAnalyse {
     }
 
     //// TODO: 4/12/16 改进合并方式,现在的合并方式只是任意量量合并
-    public IntegrationAnalyse integrateGroup2() {
+    public IntegrationAnalyse integrateGroup() {
         Iterator rankIterator = rankingGroupMap.entrySet().iterator();
         Iterator rateNumIterator = rateNumGroupMap.entrySet().iterator();
         Iterator ratingIterator = ratingGroupMap.entrySet().iterator();

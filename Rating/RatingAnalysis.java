@@ -3,6 +3,7 @@ package Rating;
 import Controller.DataController;
 import DataModel.AppData;
 import DataModel.RankingGroup;
+import Ranking.RankingAnalysis;
 import ToolKit.DateComparator;
 import ToolKit.DateFormat;
 import ToolKit.Print;
@@ -34,11 +35,13 @@ public class RatingAnalysis {
 
     public static void main(String[] args) {
         DataController dataController = new DataController();
+        RankingAnalysis rankingAnalysis = new RankingAnalysis(dataController);
+
         RatingAnalysis ratingAnalysis = new RatingAnalysis(dataController);
         ratingAnalysis.startAnalyzing();
         System.out.println("递归合并前: rating group size: " + ratingAnalysis.ratingGroupMap.size());
         double rate = 0.8;
-        ratingAnalysis.mapRecursiveCombine(rate);
+        ratingAnalysis.mapRecursiveCombine(rate, ratingAnalysis.ratingGroupMap);
         System.out.println("递归后并后: rating group size: " + ratingAnalysis.ratingGroupMap.size());
         Print.printEachGroupSize(ratingAnalysis.ratingGroupMap);
     }
@@ -189,18 +192,57 @@ public class RatingAnalysis {
                         || innerRatingGroup.getAppIdSet().containsAll(outerRatingGroup.getAppIdSet())
                         || enableCombine(innerRatingGroup.getAppIdSet(), outerRatingGroup.getAppIdSet(), rate)) {
 
-                    //// TODO: 4/12/16 remove方式不对
                     if (outerGroupSize > innerGroupSize) {
-                        ratingGroupMap.get(outerId).getAppIdSet().addAll(ratingGroupMap.get(innerId).getAppIdSet());
+                        //ratingGroupMap.get(outerId).getAppIdSet().addAll(ratingGroupMap.get(innerId).getAppIdSet());
                         ratingGroupMap.remove(innerId);
                     } else {
-                        ratingGroupMap.get(innerId).getAppIdSet().addAll(ratingGroupMap.get(outerId).getAppIdSet());
+                        //ratingGroupMap.get(innerId).getAppIdSet().addAll(ratingGroupMap.get(outerId).getAppIdSet());
                         ratingGroupMap.remove(outerId);
                     }
                     hasDuplicateSet = true;
                 }
             }
         }
+        if (hasDuplicateSet)
+            mapRecursiveCombine(rate);
+    }
+
+    public void mapRecursiveCombine(double rate, Map<String, RankingGroup> groupMap) {
+        boolean hasDuplicateSet = false;
+        Object[] outerIdSet = groupMap.keySet().toArray();
+        Object[] innerIdSet = groupMap.keySet().toArray();
+
+        for (int i = 0; i < outerIdSet.length; i++) {
+            for (int j = i + 1; j < innerIdSet.length; j++) {
+                String outerId = outerIdSet[i].toString();
+                String innerId = innerIdSet[j].toString();
+
+                Set<String> outerSet;
+                Set<String> innerSet;
+                if (groupMap.containsKey(outerId) && groupMap.containsKey(innerId)) {
+                    outerSet = groupMap.get(outerId).getAppIdSet();
+                    innerSet = groupMap.get(innerId).getAppIdSet();
+
+                    int outerGroupSize = outerSet.size();
+                    int innerGroupSize = innerSet.size();
+
+                    if (outerSet.containsAll(innerSet)
+                            || innerSet.containsAll(outerSet)
+                            || enableCombine(innerSet, outerSet, rate)) {
+                        if (outerGroupSize > innerGroupSize) {
+                            outerSet.addAll(innerSet);
+                            groupMap.remove(innerId);
+
+                        } else {
+                            innerSet.addAll(outerSet);
+                            groupMap.remove(outerId);
+                        }
+                        hasDuplicateSet = true;
+                    }
+                }
+            }
+        }
+
         if (hasDuplicateSet)
             mapRecursiveCombine(rate);
     }

@@ -4,6 +4,7 @@ import Controller.DataController;
 import DataModel.AppData;
 import DataModel.RankingGroup;
 import DataModel.RateAmountDiffRecord;
+import Ranking.RankingAnalysis;
 import ToolKit.Combination;
 import ToolKit.Print;
 import com.google.common.collect.Sets;
@@ -37,13 +38,14 @@ public class RateAmountAnalysis {
 
     public static void main(String args[]) {
         DataController dataController = new DataController();
+        RankingAnalysis rankingAnalysis = new RankingAnalysis(dataController);
         RateAmountAnalysis rateAmountAnalysis = new RateAmountAnalysis(dataController);
         rateAmountAnalysis.buildDiffRecordMap();
         rateAmountAnalysis.rateNumGroupMapGenerate();
         System.out.println("----------------------------------------------");
         System.out.println("合并前Group数: " + rateAmountAnalysis.rateNumGroupMap.size());
         double rate = 0.6;
-        rateAmountAnalysis.mapRecursiveCombine(rate);
+        rateAmountAnalysis.mapRecursiveCombine(rate, rateAmountAnalysis.rateNumGroupMap);
         System.out.println("合并后Group数" + rateAmountAnalysis.rateNumGroupMap.size());
         System.out.println("----------------------------------------------");
         Print.printEachGroupSize(rateAmountAnalysis.rateNumGroupMap);
@@ -250,7 +252,6 @@ public class RateAmountAnalysis {
                         || innerRankingGroup.getAppIdSet().containsAll(outerRankingGroup.getAppIdSet())
                         || enableCombine(innerRankingGroup.getAppIdSet(), outerRankingGroup.getAppIdSet(), rate)) {
 
-                    //// TODO: 4/12/16 直接remove方式不对,应该采用取交集或者去并集的方式
                     if (outerGroupSize > innerGroupSize)
                         rateNumGroupMap.remove(innerId);
                     else
@@ -262,6 +263,47 @@ public class RateAmountAnalysis {
         if (hasDuplicateSet)
             mapRecursiveCombine(rate);
     }
+
+    public void mapRecursiveCombine(double rate, Map<String, RankingGroup> groupMap) {
+        boolean hasDuplicateSet = false;
+        Object[] outerIdSet = groupMap.keySet().toArray();
+        Object[] innerIdSet = groupMap.keySet().toArray();
+
+        for (int i = 0; i < outerIdSet.length; i++) {
+            for (int j = i + 1; j < innerIdSet.length; j++) {
+                String outerId = outerIdSet[i].toString();
+                String innerId = innerIdSet[j].toString();
+
+                Set<String> outerSet;
+                Set<String> innerSet;
+                if (groupMap.containsKey(outerId) && groupMap.containsKey(innerId)) {
+                    outerSet = groupMap.get(outerId).getAppIdSet();
+                    innerSet = groupMap.get(innerId).getAppIdSet();
+
+                    int outerGroupSize = outerSet.size();
+                    int innerGroupSize = innerSet.size();
+
+                    if (outerSet.containsAll(innerSet)
+                            || innerSet.containsAll(outerSet)
+                            || enableCombine(innerSet, outerSet, rate)) {
+                        if (outerGroupSize > innerGroupSize) {
+                            outerSet.addAll(innerSet);
+                            groupMap.remove(innerId);
+
+                        } else {
+                            innerSet.addAll(outerSet);
+                            groupMap.remove(outerId);
+                        }
+                        hasDuplicateSet = true;
+                    }
+                }
+            }
+        }
+
+        if (hasDuplicateSet)
+            mapRecursiveCombine(rate);
+    }
+
 
     private boolean enableCombine(Set<String> setA, Set<String> setB, double rate) {
         Set<String> unionSet = Sets.union(setA, setB);

@@ -31,7 +31,7 @@ public class RankingAnalysis {
         rankingAnalysis.rankGroupMapGenerate();
         System.out.println("合并前Group数: " + rankingAnalysis.rankGroupMap.size());
         double rate = 0.6;
-        rankingAnalysis.mapRecursiveCombine(rate,rankingAnalysis.rankGroupMap);
+        rankingAnalysis.mapRecursiveCombine(rate, rankingAnalysis.rankGroupMap);
         System.out.println("合并后Group数: " + rankingAnalysis.rankGroupMap.size());
         Print.printEachGroupSize(rankingAnalysis.rankGroupMap);
     }
@@ -557,7 +557,7 @@ public class RankingAnalysis {
             mapRecursiveCombine(rate);
     }
 
-    public void mapRecursiveCombine(double rate,Map<String,RankingGroup> groupMap){
+    public void mapRecursiveCombine(double rate, Map<String, RankingGroup> groupMap) {
         boolean hasDuplicateSet = false;
         Object[] outerIdSet = groupMap.keySet().toArray();
         Object[] innerIdSet = groupMap.keySet().toArray();
