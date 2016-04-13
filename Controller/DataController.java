@@ -13,8 +13,9 @@ import java.util.*;
  */
 public class DataController {
 
-    public static final int RANK_MIN_NUM = 10;
-    public static final int RATE_NUM_MIN_NUM = 20;
+    //// TODO: 4/13/16 三组参数调整统一,更具有说理性
+    public static final int RANK_MIN_NUM = 5;
+    public static final int RATE_NUM_MIN_NUM = 5;
     public static final int RATING_MIN_NUM = 5;
 
     private DbController dbController = new DbController();
