@@ -47,7 +47,7 @@ public class IntegrationAnalyse {
         integrationAnalyse.filterData(30);
         System.out.println("过滤后group size大小: " + integrationAnalyse.getGroupSetSize());
         System.out.println("------------------------------------------");
-        //integrationAnalyse.printEachGroupSize();
+        integrationAnalyse.printEachGroupSize();
         //integrationAnalyse.exportGroupData();
     }
 
