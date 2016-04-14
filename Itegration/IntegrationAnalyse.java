@@ -37,18 +37,18 @@ public class IntegrationAnalyse {
     public static void main(String args[]) {
         IntegrationAnalyse integrationAnalyse = new IntegrationAnalyse();
         //// TODO: 4/13/16 思路:先不对单组属性判断的group进行分组合并,而是直接进行三组合并
-        integrationAnalyse.getAllMaps(1, 1, 1).integrateGroup(0.3);
+        integrationAnalyse.getAllMaps(0.8, 0.8, 0.8).integrateGroup(0.3);
         System.out.println("递归合并...");
         System.out.println("递归合并前的 group size: " + integrationAnalyse.groupSet.size());
 
-//        integrationAnalyse.recursiveCombine(0.6);
-//        System.out.println("递归合并后group size大小: " + integrationAnalyse.getGroupSetSize());
+        integrationAnalyse.recursiveCombine(0.8);
+        System.out.println("递归合并后group size大小: " + integrationAnalyse.getGroupSetSize());
 
-        integrationAnalyse.filterData(20);
+        integrationAnalyse.filterData(30);
         System.out.println("过滤后group size大小: " + integrationAnalyse.getGroupSetSize());
         System.out.println("------------------------------------------");
-        integrationAnalyse.printEachGroupSize();
-        integrationAnalyse.exportGroupData();
+        //integrationAnalyse.printEachGroupSize();
+        //integrationAnalyse.exportGroupData();
     }
 
     public int getGroupSetSize() {
@@ -335,6 +335,10 @@ public class IntegrationAnalyse {
             }
             if (unionSet != null) {
                 groupSet.add(unionSet);
+            } else {
+                groupSet.add(setA);
+                groupSet.add(setB);
+                groupSet.add(setC);
             }
         } else if (setB.size() >= setA.size() && setB.size() >= setC.size()) {
             if (!setB.containsAll(setA) && !setB.containsAll(setC)) {
@@ -346,8 +350,13 @@ public class IntegrationAnalyse {
             } else {
                 unionSet = setB;
             }
-            if (unionSet != null)
+            if (unionSet != null) {
                 groupSet.add(unionSet);
+            } else {
+                groupSet.add(setA);
+                groupSet.add(setB);
+                groupSet.add(setC);
+            }
         } else {
             if (!setC.containsAll(setA) && !setC.containsAll(setB)) {
                 unionSet = getCombineSet(setA, setB, setC, rate);
@@ -358,8 +367,13 @@ public class IntegrationAnalyse {
             } else {
                 unionSet = setC;
             }
-            if (unionSet != null)
+            if (unionSet != null) {
                 groupSet.add(unionSet);
+            } else {
+                groupSet.add(setA);
+                groupSet.add(setB);
+                groupSet.add(setC);
+            }
         }
     }
 
