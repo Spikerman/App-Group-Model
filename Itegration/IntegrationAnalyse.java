@@ -37,7 +37,7 @@ public class IntegrationAnalyse {
     public static void main(String args[]) {
         IntegrationAnalyse integrationAnalyse = new IntegrationAnalyse();
         //// TODO: 4/13/16 思路:先不对单组属性判断的group进行分组合并,而是直接进行三组合并
-        integrationAnalyse.getAllMaps(0.6, 0.6, 0.6).integrateGroup(0.3);
+        integrationAnalyse.getAllMaps(1, 1, 1).integrateGroup(0.3);
         System.out.println("递归合并...");
         System.out.println("递归合并前的 group size: " + integrationAnalyse.groupSet.size());
 

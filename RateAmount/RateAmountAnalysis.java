@@ -31,7 +31,7 @@ public class RateAmountAnalysis {
 
     public RateAmountAnalysis(DataController dataController) {
         this.dataController = dataController;
-        dataController.buildAppDataListForRateNumFromDb().buildAppDataMapForRateNum();
+        dataController.buildAppMapForRateNumFromDb();
         appDataMap = dataController.getAppMapForRateNum();
         appMetaDataMap = dataController.getAppMetaDataMapForRateNum();
     }
@@ -44,7 +44,7 @@ public class RateAmountAnalysis {
         rateAmountAnalysis.rateNumGroupMapGenerate();
         System.out.println("----------------------------------------------");
         System.out.println("合并前Group数: " + rateAmountAnalysis.rateNumGroupMap.size());
-        double rate = 0.6;
+        double rate = 0.8;
         rateAmountAnalysis.mapRecursiveCombine(rate, rateAmountAnalysis.rateNumGroupMap);
         System.out.println("合并后Group数" + rateAmountAnalysis.rateNumGroupMap.size());
         System.out.println("----------------------------------------------");

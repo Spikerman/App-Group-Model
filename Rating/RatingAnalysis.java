@@ -23,20 +23,19 @@ public class RatingAnalysis {
 
 //    public RatingAnalysis() {
 //        DataController dataController = new DataController();
-//        dataController = dataController.buildAppDataListForRatingFromDb().buildAppDataMapForRating();
+//        dataController = dataController.buildAppMapForRatingFromDb().buildAppDataMapForRating();
 //        appDataMap = dataController.getAppMapForRating();
 //    }
 
     public RatingAnalysis(DataController dataController) {
         this.dataController = dataController;
-        dataController.buildAppDataListForRatingFromDb().buildAppDataMapForRating();
+        dataController.buildAppMapForRatingFromDb();
         appDataMap = dataController.getAppMapForRating();
     }
 
     public static void main(String[] args) {
         DataController dataController = new DataController();
         RankingAnalysis rankingAnalysis = new RankingAnalysis(dataController);
-
         RatingAnalysis ratingAnalysis = new RatingAnalysis(dataController);
         ratingAnalysis.startAnalyzing();
         System.out.println("递归合并前: rating group size: " + ratingAnalysis.ratingGroupMap.size());

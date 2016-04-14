@@ -15,8 +15,8 @@ public class DataController {
 
     //// TODO: 4/13/16 三组参数调整统一,更具有说理性
     public static final int RANK_MIN_NUM = 5;
-    public static final int RATE_NUM_MIN_NUM = 5;
-    public static final int RATING_MIN_NUM = 5;
+    public static final int RATE_NUM_MIN_NUM = 10;
+    public static final int RATING_MIN_NUM = 3;
 
     private DbController dbController = new DbController();
     private List<AppData> appDataRecordListForRank = new LinkedList<>();
@@ -100,7 +100,8 @@ public class DataController {
             while (rs.next()) {
                 AppData appData = new AppData();
                 appData.appId = rs.getString("appId");
-                rankAppIdPool.add(appData.appId);
+                //// TODO: 4/14/16 rankAppIdPool内的筛选,原先为包含所有在飙升榜中出现的APP,先改为所有在飙升榜中,出现过K次以上的APP 
+                //rankAppIdPool.add(appData.appId);
                 appData.rankType = rs.getString("rankType");
                 appData.ranking = rs.getInt("ranking");
                 appData.rankFloatNum = rs.getInt("rankFloatNum");
@@ -166,8 +167,8 @@ public class DataController {
     }
 
     //generate appData List for rank num analysis
-    public DataController buildAppDataListForRateNumFromDb() {
-        String selectSql = "SELECT * FROM Data.AppInfo Where rankType ='update'";
+    public void buildAppMapForRateNumFromDb() {
+        String selectSql = "SELECT * FROM Data.AppInfo";
         ResultSet rs;
         Statement statement;
         try {
@@ -175,7 +176,6 @@ public class DataController {
             System.out.println("start rate num data fetch");
             rs = statement.executeQuery(selectSql);
             System.out.println("end rate num data fetch");
-
             while (rs.next()) {
                 AppData appData = new AppData();
                 appData.appId = rs.getString("appId");
@@ -186,23 +186,26 @@ public class DataController {
                 appData.userTotalRateCount = rs.getInt("userRatingCount");
                 appData.date = DateFormat.timestampToMonthDayYear(rs.getTimestamp("date"));
                 if (rankAppIdPool.contains(appData.appId)) {
-                    appDataRecordListForRateNum.add(appData);
+                    //appDataRecordListForRateNum.add(appData);
+                    if (appMapForRateNum.containsKey(appData.appId)) {
+                        appMapForRateNum.get(appData.appId).add(appData);
+                    } else {
+                        List<AppData> newList = new LinkedList<>();
+                        newList.add(appData);
+                        appMapForRateNum.put(appData.appId, newList);
+                    }
                     addMetaDataToApp(appData.appId);
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
-        return this;
     }
 
-    public void addMetaDataToApp(String appId) {
-        if (!appMetaDataMapForRateNum.containsKey(appId)) {
-            AppData appData = new AppData();
-            appData.appId = appId;
-            appMetaDataMapForRateNum.put(appId, appData);
-        }
+    private void addMetaDataToApp(String appId) {
+        AppData appData = new AppData(appId);
+        appMetaDataMapForRateNum.put(appId, appData);
+
     }
 
     public List<String> getAllAppIdFromDb() {
@@ -268,8 +271,8 @@ public class DataController {
     }
 
 
-    public DataController buildAppDataListForRatingFromDb() {
-        String selectSql = "SELECT * FROM AppInfo Where rankType ='update'";
+    public void buildAppMapForRatingFromDb() {
+        String selectSql = "SELECT * FROM AppInfo";
         ResultSet rs;
         Statement statement;
         try {
@@ -288,14 +291,19 @@ public class DataController {
                 appData.averageUserRatingForCurrentVersion = Double.parseDouble(rs.getString("averageUserRatingForCurrentVersion"));
                 appData.date = DateFormat.timestampToMonthDayYear(rs.getTimestamp("date"));
                 if (rankAppIdPool.contains(appData.appId)) {
-                    appDataRecordListForRating.add(appData);
+                    //appDataRecordListForRating.add(appData);
+                    if (appMapForRating.containsKey(appData.appId)) {
+                        appMapForRating.get(appData.appId).add(appData);
+                    } else {
+                        List<AppData> newList = new LinkedList<>();
+                        newList.add(appData);
+                        appMapForRating.put(appData.appId, newList);
+                    }
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
-        return this;
     }
 
     //build app map according to the app data list that fetch from the database
@@ -309,17 +317,21 @@ public class DataController {
                 appMapForRank.put(appData.appId, newList);
             }
         }
-        System.out.println("rank app数: " + appMapForRank.size());
+        System.out.println("数据库中的rank app总数: " + appMapForRank.size());
 
         Iterator iterator = appMapForRank.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry entry = (Map.Entry) iterator.next();
+            String appId = entry.getKey().toString();
             List appDataList = (List) entry.getValue();
             if (appDataList.size() < RANK_MIN_NUM)
                 iterator.remove();
+            else
+                //// TODO: 4/14/16 在此处修改为rankAppIdPool内限制为排行榜出现数超过阈值的app
+                rankAppIdPool.add(appId);
         }
 
-        System.out.println("符合rank条件的数量: " + appMapForRank.size());
+        System.out.println("符合rank条件的App数: " + appMapForRank.size());
         return this;
     }
 

@@ -37,4 +37,10 @@ public class AppData {
 
     }
 
+    public AppData(String appId) {
+        this.appId = appId;
+    }
+
+    public AppData() {
+    }
 }
