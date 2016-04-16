@@ -27,7 +27,6 @@ public class IntegrationAnalyse {
 
     public IntegrationAnalyse() {
         dataController = new DataController();
-
         //ranking 必须第一个构造,创建rankAppPool
         rankingAnalysis = new RankingAnalysis(dataController);
         rateAmountAnalysis = new RateAmountAnalysis(dataController);
@@ -36,20 +35,18 @@ public class IntegrationAnalyse {
 
     public static void main(String args[]) {
         IntegrationAnalyse integrationAnalyse = new IntegrationAnalyse();
-        //// TODO: 4/13/16 思路:先不对单组属性判断的group进行分组合并,而是直接进行三组合并
-
-        integrationAnalyse.getAllMaps(0.8, 0.8, 0.8).integrateGroup(0.5);
+        integrationAnalyse.getAllMaps(0.8, 0.8, 0.8).integrateGroup(0.8);
         System.out.println("三组指标集成后的总数: " + integrationAnalyse.groupSet.size());
 
-        System.out.println("递归合并...");
-        integrationAnalyse.recursiveCombine(0.8);
-        System.out.println("递归合并后group size大小: " + integrationAnalyse.getGroupSetSize());
+        //System.out.println("递归合并...");
+        //integrationAnalyse.recursiveCombine(0.8);
+        //System.out.println("递归合并后group size大小: " + integrationAnalyse.getGroupSetSize());
 
         integrationAnalyse.filterData(30);
         System.out.println("过滤后group size大小: " + integrationAnalyse.getGroupSetSize());
         System.out.println("------------------------------------------");
         integrationAnalyse.printEachGroupSize();
-        //integrationAnalyse.exportGroupData();
+        integrationAnalyse.exportGroupData();
     }
 
     public int getGroupSetSize() {
@@ -83,7 +80,7 @@ public class IntegrationAnalyse {
         System.out.println("rate num group 合并后Group数: " + rateAmountAnalysis.rateNumGroupMap.size());
         this.rateNumGroupMap = rateAmountAnalysis.rateNumGroupMap;
         int total = ratingAnalysis.ratingGroupMap.size() + rankingAnalysis.rankGroupMap.size() + rateAmountAnalysis.rateNumGroupMap.size();
-        System.out.println("三组指标集成前的总数: " +total);
+        System.out.println("三组指标集成前的总数: " + total);
         return this;
     }
 
@@ -392,9 +389,7 @@ public class IntegrationAnalyse {
             appIdIterator = idSet.iterator();
             while (appIdIterator.hasNext()) {
                 String appId = (String) appIdIterator.next();
-
                 System.out.println(groupNum + "  " + appId);
-
                 dataController.exportAppGroupToDb(groupNum, appId);
             }
             groupNum++;

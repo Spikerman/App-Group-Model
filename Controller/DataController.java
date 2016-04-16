@@ -15,10 +15,11 @@ public class DataController {
 
     //// TODO: 4/13/16 三组参数调整统一,更具有说理性
     public static final int RANK_MIN_NUM = 8;
-    public static final int RATE_NUM_MIN_NUM =8;
+    public static final int RATE_NUM_MIN_NUM = 8;
     public static final int RATING_MIN_NUM = 4;
 
     private DbController dbController = new DbController();
+    private RemoteDbController remoteDbController = new RemoteDbController();
     private List<AppData> appDataRecordListForRank = new LinkedList<>();
     private List<AppData> appDataRecordListForRateNum = new LinkedList<>();
     private List<AppData> appDataRecordListForRating = new LinkedList<>();
@@ -36,7 +37,7 @@ public class DataController {
         //initial the rank query statement
         dbController.setRankNumQueryStmt(DbController.rankQuerySql);
         dbController.setInsertRateNumTestStmt(DbController.insertTestSql);
-        dbController.setInsertAppGroupStmt(DbController.insertAppGroupSql);
+        remoteDbController.setInsertAppGroupStmt(remoteDbController.insertAppGroupSql);
     }
 
     public static void main(String args[]) {
@@ -156,9 +157,9 @@ public class DataController {
 
     public void exportAppGroupToDb(int groupId, String appId) {
         try {
-            dbController.insertAppGroupStmt.setInt(1, groupId);
-            dbController.insertAppGroupStmt.setString(2, appId);
-            dbController.insertAppGroupStmt.executeUpdate();
+            remoteDbController.insertAppGroupStmt.setInt(1, groupId);
+            remoteDbController.insertAppGroupStmt.setString(2, appId);
+            remoteDbController.insertAppGroupStmt.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
         }
