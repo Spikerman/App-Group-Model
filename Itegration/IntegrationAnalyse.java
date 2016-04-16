@@ -37,10 +37,11 @@ public class IntegrationAnalyse {
     public static void main(String args[]) {
         IntegrationAnalyse integrationAnalyse = new IntegrationAnalyse();
         //// TODO: 4/13/16 思路:先不对单组属性判断的group进行分组合并,而是直接进行三组合并
-        integrationAnalyse.getAllMaps(0.8, 0.8, 0.8).integrateGroup(0.3);
-        System.out.println("递归合并...");
-        System.out.println("递归合并前的 group size: " + integrationAnalyse.groupSet.size());
 
+        integrationAnalyse.getAllMaps(0.8, 0.8, 0.8).integrateGroup(0.5);
+        System.out.println("三组指标集成后的总数: " + integrationAnalyse.groupSet.size());
+
+        System.out.println("递归合并...");
         integrationAnalyse.recursiveCombine(0.8);
         System.out.println("递归合并后group size大小: " + integrationAnalyse.getGroupSetSize());
 
@@ -81,6 +82,8 @@ public class IntegrationAnalyse {
         rateAmountAnalysis.mapRecursiveCombine(rateNumRate, rateAmountAnalysis.rateNumGroupMap);
         System.out.println("rate num group 合并后Group数: " + rateAmountAnalysis.rateNumGroupMap.size());
         this.rateNumGroupMap = rateAmountAnalysis.rateNumGroupMap;
+        int total = ratingAnalysis.ratingGroupMap.size() + rankingAnalysis.rankGroupMap.size() + rateAmountAnalysis.rateNumGroupMap.size();
+        System.out.println("三组指标集成前的总数: " +total);
         return this;
     }
 

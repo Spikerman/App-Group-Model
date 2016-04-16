@@ -206,10 +206,12 @@ public class RateAmountAnalysis {
         for (Date date : shareDateSet) {
             RateAmountDiffRecord outerDiffRecord = outerMap.get(date);
             RateAmountDiffRecord innerDiffRecord = innerMap.get(date);
+//// TODO: 4/16/16 只判断相同的日期超过平均值的数
+//            if ((outerDiffRecord.amountDiff > outerAppAvgDiffNum && innerDiffRecord.amountDiff > innerAppAvgDiffNum)
+//                    || (outerDiffRecord.amountDiff < outerAppAvgDiffNum && innerDiffRecord.amountDiff < innerAppAvgDiffNum
+//                    && outerDiffRecord.amountDiff > 0 && innerDiffRecord.amountDiff > 0))
 
-            if ((outerDiffRecord.amountDiff > outerAppAvgDiffNum && innerDiffRecord.amountDiff > innerAppAvgDiffNum)
-                    || (outerDiffRecord.amountDiff < outerAppAvgDiffNum && innerDiffRecord.amountDiff < innerAppAvgDiffNum
-                    && outerDiffRecord.amountDiff > 0 && innerDiffRecord.amountDiff > 0))
+            if ((outerDiffRecord.amountDiff > outerAppAvgDiffNum && innerDiffRecord.amountDiff > innerAppAvgDiffNum))
                 duplicateCount++;
         }
 
@@ -301,7 +303,7 @@ public class RateAmountAnalysis {
         }
 
         if (hasDuplicateSet)
-            mapRecursiveCombine(rate);
+            mapRecursiveCombine(rate, rateNumGroupMap);
     }
 
 

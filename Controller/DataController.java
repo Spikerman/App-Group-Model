@@ -14,9 +14,9 @@ import java.util.*;
 public class DataController {
 
     //// TODO: 4/13/16 三组参数调整统一,更具有说理性
-    public static final int RANK_MIN_NUM = 7;
-    public static final int RATE_NUM_MIN_NUM = 10;
-    public static final int RATING_MIN_NUM = 3;
+    public static final int RANK_MIN_NUM = 8;
+    public static final int RATE_NUM_MIN_NUM =8;
+    public static final int RATING_MIN_NUM = 4;
 
     private DbController dbController = new DbController();
     private List<AppData> appDataRecordListForRank = new LinkedList<>();
@@ -100,8 +100,6 @@ public class DataController {
             while (rs.next()) {
                 AppData appData = new AppData();
                 appData.appId = rs.getString("appId");
-                //// TODO: 4/14/16 rankAppIdPool内的筛选,原先为包含所有在飙升榜中出现的APP,先改为所有在飙升榜中,出现过K次以上的APP 
-                //rankAppIdPool.add(appData.appId);
                 appData.rankType = rs.getString("rankType");
                 appData.ranking = rs.getInt("ranking");
                 appData.rankFloatNum = rs.getInt("rankFloatNum");
@@ -327,7 +325,6 @@ public class DataController {
             if (appDataList.size() < RANK_MIN_NUM)
                 iterator.remove();
             else
-                //// TODO: 4/14/16 在此处修改为rankAppIdPool内限制为排行榜出现数超过阈值的app
                 rankAppIdPool.add(appId);
         }
 

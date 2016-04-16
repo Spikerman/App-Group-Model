@@ -30,7 +30,7 @@ public class RankingAnalysis {
         RankingAnalysis rankingAnalysis = new RankingAnalysis(dataController);
         rankingAnalysis.rankGroupMapGenerate();
         System.out.println("合并前Group数: " + rankingAnalysis.rankGroupMap.size());
-        double rate = 0.6;
+        double rate = 0.8;
         rankingAnalysis.mapRecursiveCombine(rate, rankingAnalysis.rankGroupMap);
         System.out.println("合并后Group数: " + rankingAnalysis.rankGroupMap.size());
         Print.printEachGroupSize(rankingAnalysis.rankGroupMap);
@@ -41,12 +41,10 @@ public class RankingAnalysis {
     }
 
     public void getGroupByRank() {
-
         findUpDownPattern();
         findDownUpPattern();
         findUpUpPattern();
         findDownDownPattern();
-
         beginEndMapBuilder(beginDayMap, endDayMap);
         expandGroup(beginDayMap, endDayMap);
     }
@@ -594,7 +592,7 @@ public class RankingAnalysis {
         }
 
         if (hasDuplicateSet)
-            mapRecursiveCombine(rate);
+            mapRecursiveCombine(rate, rankGroupMap);
     }
 
     private boolean enableCombine(Set<String> setA, Set<String> setB, double rate) {

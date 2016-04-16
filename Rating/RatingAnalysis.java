@@ -136,7 +136,6 @@ public class RatingAnalysis {
 
                 HashMap outerMap = (HashMap) outerEntry.getValue();
                 HashMap innerMap = (HashMap) innerEntry.getValue();
-
                 makeGroup(outerMap, outerId, innerMap, innerId);
             }
         }
@@ -243,7 +242,7 @@ public class RatingAnalysis {
         }
 
         if (hasDuplicateSet)
-            mapRecursiveCombine(rate);
+            mapRecursiveCombine(rate, ratingGroupMap);
     }
 
     private boolean enableCombine(Set<String> setA, Set<String> setB, double rate) {
