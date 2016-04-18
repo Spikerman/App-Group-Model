@@ -46,7 +46,9 @@ public class IntegrationAnalyse {
         System.out.println("过滤后group size大小: " + integrationAnalyse.getGroupSetSize());
         System.out.println("------------------------------------------");
         integrationAnalyse.printEachGroupSize();
-        integrationAnalyse.exportGroupData();
+
+        //导出数据到远程数据库
+        //integrationAnalyse.exportGroupData();
     }
 
     public int getGroupSetSize() {
@@ -81,6 +83,7 @@ public class IntegrationAnalyse {
         this.rateNumGroupMap = rateAmountAnalysis.rateNumGroupMap;
         int total = ratingAnalysis.ratingGroupMap.size() + rankingAnalysis.rankGroupMap.size() + rateAmountAnalysis.rateNumGroupMap.size();
         System.out.println("三组指标集成前的总数: " + total);
+
         return this;
     }
 
@@ -152,7 +155,6 @@ public class IntegrationAnalyse {
         return this;
     }
 
-    //// TODO: 4/13/16 除了取并集以外,再对那些所占比例未达到定制的,仍旧将单个组融入到groupMap中,思路即为能有多组融合最好,没有的话也就将各因素分析的组都打入group map中 
     public IntegrationAnalyse integrateGroup(double rate) {
         Object[] rankArray = rankGroupMap.entrySet().toArray();
         Object[] rateNumArray = rateNumGroupMap.entrySet().toArray();
@@ -290,89 +292,89 @@ public class IntegrationAnalyse {
     }
 
     //// TODO: 4/13/16 合并方法在论文中记录
-    private void combineGroup(Set<String> setA, Set<String> setB, Set<String> setC, double rate) {
-//        if (setA.containsAll(setB)) {
-//            if (setA.containsAll(setC)) {
-//                groupSet.add(setA);
+    private void combineGroup(Set<String> rankSet, Set<String> rateNumSet, Set<String> ratingSet, double rate) {
+//        if (rankSet.containsAll(rateNumSet)) {
+//            if (rankSet.containsAll(ratingSet)) {
+//                groupSet.add(rankSet);
 //                return true;
 //            } else {
-//                if (enableCombine(setA, setC, rate)) {
-//                    groupSet.add(Sets.union(setA, setC));
+//                if (enableCombine(rankSet, ratingSet, rate)) {
+//                    groupSet.add(Sets.union(rankSet, ratingSet));
 //                    return true;
 //                }
 //            }
-//        } else if (setB.containsAll(setA)) {
-//            if (setB.containsAll(setC)) {
-//                groupSet.add(setB);
+//        } else if (rateNumSet.containsAll(rankSet)) {
+//            if (rateNumSet.containsAll(ratingSet)) {
+//                groupSet.add(rateNumSet);
 //                return true;
 //            } else {
-//                if (enableCombine(setB, setC, rate)) {
-//                    groupSet.add(Sets.union(setB, setC));
+//                if (enableCombine(rateNumSet, ratingSet, rate)) {
+//                    groupSet.add(Sets.union(rateNumSet, ratingSet));
 //                    return true;
 //                }
 //            }
-//        } else if (setC.containsAll(setA)) {
-//            if (setC.containsAll(setB)) {
-//                groupSet.add(setC);
+//        } else if (ratingSet.containsAll(rankSet)) {
+//            if (ratingSet.containsAll(rateNumSet)) {
+//                groupSet.add(ratingSet);
 //                return true;
 //            } else {
-//                if (enableCombine(setA, setC, rate)) {
-//                    groupSet.add(Sets.union(setA, setC));
+//                if (enableCombine(rankSet, ratingSet, rate)) {
+//                    groupSet.add(Sets.union(rankSet, ratingSet));
 //                    return true;
 //                }
 //            }
 //        }
         Set<String> unionSet;
-        if (setA.size() >= setB.size() && setA.size() >= setC.size()) {
-            if (!setA.containsAll(setB) && !setA.containsAll(setC)) {
-                unionSet = getCombineSet(setA, setB, setC, rate);
-            } else if (setA.containsAll(setB) && !setA.containsAll(setC)) {
-                unionSet = getCombineSet(setA, setC, rate);
-            } else if (!setA.containsAll(setB) && setA.containsAll(setC)) {
-                unionSet = getCombineSet(setA, setB, rate);
+        if (rankSet.size() >= rateNumSet.size() && rankSet.size() >= ratingSet.size()) {
+            if (!rankSet.containsAll(rateNumSet) && !rankSet.containsAll(ratingSet)) {
+                unionSet = getCombineSet(rankSet, rateNumSet, ratingSet, rate);
+            } else if (rankSet.containsAll(rateNumSet) && !rankSet.containsAll(ratingSet)) {
+                unionSet = getCombineSet(rankSet, ratingSet, rate);
+            } else if (!rankSet.containsAll(rateNumSet) && rankSet.containsAll(ratingSet)) {
+                unionSet = getCombineSet(rankSet, rateNumSet, rate);
             } else {
-                unionSet = setA;
+                unionSet = rankSet;
             }
             if (unionSet != null) {
                 groupSet.add(unionSet);
             } else {
-                groupSet.add(setA);
-                groupSet.add(setB);
-                groupSet.add(setC);
+                groupSet.add(rankSet);
+               // groupSet.add(rateNumSet);
+               // groupSet.add(ratingSet);
             }
-        } else if (setB.size() >= setA.size() && setB.size() >= setC.size()) {
-            if (!setB.containsAll(setA) && !setB.containsAll(setC)) {
-                unionSet = getCombineSet(setA, setB, setC, rate);
-            } else if (setB.containsAll(setA) && !setB.containsAll(setC)) {
-                unionSet = getCombineSet(setB, setC, rate);
-            } else if (!setB.containsAll(setA) && setB.containsAll(setC)) {
-                unionSet = getCombineSet(setB, setA, rate);
+        } else if (rateNumSet.size() >= rankSet.size() && rateNumSet.size() >= ratingSet.size()) {
+            if (!rateNumSet.containsAll(rankSet) && !rateNumSet.containsAll(ratingSet)) {
+                unionSet = getCombineSet(rankSet, rateNumSet, ratingSet, rate);
+            } else if (rateNumSet.containsAll(rankSet) && !rateNumSet.containsAll(ratingSet)) {
+                unionSet = getCombineSet(rateNumSet, ratingSet, rate);
+            } else if (!rateNumSet.containsAll(rankSet) && rateNumSet.containsAll(ratingSet)) {
+                unionSet = getCombineSet(rateNumSet, rankSet, rate);
             } else {
-                unionSet = setB;
+                unionSet = rateNumSet;
             }
             if (unionSet != null) {
                 groupSet.add(unionSet);
             } else {
-                groupSet.add(setA);
-                groupSet.add(setB);
-                groupSet.add(setC);
+                groupSet.add(rankSet);
+                //groupSet.add(rateNumSet);
+                //groupSet.add(ratingSet);
             }
         } else {
-            if (!setC.containsAll(setA) && !setC.containsAll(setB)) {
-                unionSet = getCombineSet(setA, setB, setC, rate);
-            } else if (setC.containsAll(setA) && !setC.containsAll(setB)) {
-                unionSet = getCombineSet(setC, setB, rate);
-            } else if (!setC.containsAll(setA) && setC.containsAll(setB)) {
-                unionSet = getCombineSet(setC, setA, rate);
+            if (!ratingSet.containsAll(rankSet) && !ratingSet.containsAll(rateNumSet)) {
+                unionSet = getCombineSet(rankSet, rateNumSet, ratingSet, rate);
+            } else if (ratingSet.containsAll(rankSet) && !ratingSet.containsAll(rateNumSet)) {
+                unionSet = getCombineSet(ratingSet, rateNumSet, rate);
+            } else if (!ratingSet.containsAll(rankSet) && ratingSet.containsAll(rateNumSet)) {
+                unionSet = getCombineSet(ratingSet, rankSet, rate);
             } else {
-                unionSet = setC;
+                unionSet = ratingSet;
             }
             if (unionSet != null) {
                 groupSet.add(unionSet);
             } else {
-                groupSet.add(setA);
-                groupSet.add(setB);
-                groupSet.add(setC);
+               groupSet.add(rankSet);
+               // groupSet.add(rateNumSet);
+               // groupSet.add(ratingSet);
             }
         }
     }
