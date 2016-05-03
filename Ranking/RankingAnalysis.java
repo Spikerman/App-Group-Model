@@ -467,6 +467,60 @@ public class RankingAnalysis {
         }
     }
 
+    public void rankGroupMapGenerateTest(int minimum) {
+        Map appRankMap = dataController.getAppMapForRank();
+        Object[] outerAppRankArray = appRankMap.entrySet().toArray();
+        Object[] innerAppRankArray = outerAppRankArray.clone();
+
+        for (int i = 0; i < outerAppRankArray.length; i++) {
+            for (int j = i + 1; j < innerAppRankArray.length; j++) {
+                Map.Entry outerEntry = (Map.Entry) outerAppRankArray[i];
+                Map.Entry innerEntry = (Map.Entry) innerAppRankArray[j];
+
+                String outerId = outerEntry.getKey().toString();
+                String innerId = innerEntry.getKey().toString();
+
+                List outerList = (List) outerEntry.getValue();
+                List innerList = (List) innerEntry.getValue();
+                rankPatternCombineTest(outerList, outerId, innerList, innerId,minimum);
+            }
+        }
+    }
+
+
+
+
+    public void rankPatternCombineTest(List<AppData> outerAppList, String outerAppId, List<AppData> innerAppList, String innerAppId,int minimum) {
+
+        int duplicateCount = 0;
+        Set<Date> dateSet = new HashSet<>();
+
+        for (int i = 0; i < outerAppList.size(); i++) {
+            for (int j = i; j < innerAppList.size(); j++) {
+                AppData appA = outerAppList.get(i);
+                AppData appB = innerAppList.get(j);
+                dateSet.add(appA.date);
+                dateSet.add(appB.date);
+                if (appA.rankType.equals(appB.rankType) && appA.date.equals(appB.date))
+                    duplicateCount++;
+            }
+        }
+
+        if (duplicateCount >= minimum) {
+            if (rankGroupMap.containsKey(outerAppId)) {
+                RankingGroup rankingGroup = rankGroupMap.get(outerAppId);
+                rankingGroup.getAppIdSet().add(innerAppId);
+                rankingGroup.commonChangeDateSet.addAll(dateSet);
+            } else {
+                RankingGroup newGroup = new RankingGroup();
+                newGroup.getAppIdSet().add(outerAppId);
+                newGroup.getAppIdSet().add(innerAppId);
+                newGroup.commonChangeDateSet.addAll(dateSet);
+                rankGroupMap.put(outerAppId, newGroup);
+            }
+        }
+    }
+
     //generate the rankGroupMap that has appId as key, and RankingGroup as element
     public void rankGroupMapGenerate() {
         Map appRankMap = dataController.getAppMapForRank();
@@ -487,6 +541,8 @@ public class RankingAnalysis {
             }
         }
     }
+
+
 
     //combine the generated app rank map, to remove the subset of some entry
     public void mapRecursiveCombine(double rate) {
