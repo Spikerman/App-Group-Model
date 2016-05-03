@@ -90,7 +90,7 @@ public class RatingAnalysis {
             }
         }
 
-        if (duplicateCount >= DataController.RATING_MIN_NUM) {
+        if (duplicateCount >= dataController.RATING_MIN_NUM) {
             if (ratingGroupMap.containsKey(outerAppId)) {
                 RankingGroup ratingGroup = ratingGroupMap.get(outerAppId);
                 ratingGroup.getAppIdSet().add(innerAppId);

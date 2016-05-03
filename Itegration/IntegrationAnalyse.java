@@ -291,7 +291,6 @@ public class IntegrationAnalyse {
             return null;
     }
 
-    //// TODO: 4/13/16 合并方法在论文中记录
     private void combineGroup(Set<String> rankSet, Set<String> rateNumSet, Set<String> ratingSet, double rate) {
 //        if (rankSet.containsAll(rateNumSet)) {
 //            if (rankSet.containsAll(ratingSet)) {

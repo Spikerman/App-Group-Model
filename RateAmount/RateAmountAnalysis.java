@@ -216,7 +216,7 @@ public class RateAmountAnalysis {
         }
 
 
-        if (duplicateCount >= DataController.RATE_NUM_MIN_NUM) {
+        if (duplicateCount >=  dataController.RATE_NUM_MIN_NUM) {
             if (rateNumGroupMap.containsKey(outerAppId)) {
                 RankingGroup rankingGroup = rateNumGroupMap.get(outerAppId);
                 rankingGroup.getAppIdSet().add(innerAppId);

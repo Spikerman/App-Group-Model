@@ -13,9 +13,9 @@ import java.util.*;
  */
 public class DataController {
 
-    public static final int RANK_MIN_NUM = 8;
-    public static final int RATE_NUM_MIN_NUM = 8;
-    public static final int RATING_MIN_NUM = 4;
+    public int RANK_MIN_NUM = 8;
+    public int RATE_NUM_MIN_NUM = 8;
+    public int RATING_MIN_NUM = 4;
 
     private DbController dbController = new DbController();
     private RemoteDbController remoteDbController = new RemoteDbController();
@@ -36,7 +36,13 @@ public class DataController {
         //initial the rank query statement
         dbController.setRankNumQueryStmt(DbController.rankQuerySql);
         dbController.setInsertRateNumTestStmt(DbController.insertTestSql);
+        dbController.setInsertRateNumTestStmt(DbController.insertRankAppSql);
         remoteDbController.setInsertAppGroupStmt(remoteDbController.insertAppGroupSql);
+        dbController.setInsertAppGroupStmt(remoteDbController.insertAppGroupSql);
+        dbController.setInsertRankAppStmt(DbController.insertRankAppSql);
+        //System.out.println("RANK_MIN_NUM = " + RANK_MIN_NUM);
+        //System.out.println("RATE_NUM_MIN_NUM = " + RATE_NUM_MIN_NUM);
+        //System.out.println("RATING_MIN_NUM = " + RATING_MIN_NUM);
     }
 
     public static void main(String args[]) {
@@ -86,8 +92,6 @@ public class DataController {
     }
 
     public DataController getRankAppInfoFromDb() {
-        //String selectSql = "SELECT * FROM Data.AppInfo WHERE( appId='1062817956')";
-
         String selectSql = "SELECT * FROM Data.AppInfo Where(rankType in ('topFreeFlowDown','topFreeFlowUp' ,'topPaidFlowDown' ,'topPaidFlowUp'))";
         Statement statement;
         ResultSet rs;
@@ -159,6 +163,14 @@ public class DataController {
             remoteDbController.insertAppGroupStmt.setInt(1, groupId);
             remoteDbController.insertAppGroupStmt.setString(2, appId);
             remoteDbController.insertAppGroupStmt.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        try {
+            dbController.insertAppGroupStmt.setInt(1, groupId);
+            dbController.insertAppGroupStmt.setString(2, appId);
+            dbController.insertAppGroupStmt.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -330,6 +342,41 @@ public class DataController {
 
         System.out.println("符合rank条件的App数: " + appMapForRank.size());
         return this;
+    }
+
+    public void countValidAppAmount(int minimum) {
+        int total = 0;
+
+        Iterator iterator = appMapForRank.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry entry = (Map.Entry) iterator.next();
+            List appDataList = (List) entry.getValue();
+            if (appDataList.size() >= minimum)
+                total++;
+        }
+
+        System.out.println(minimum+"  "+ total);
+        try {
+
+            dbController.insertAppRankStmt.setInt(1, minimum);
+            dbController.insertAppRankStmt.setInt(2, total);
+            dbController.insertAppRankStmt.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public void constructRankAppMap(){
+        for (AppData appData : appDataRecordListForRank) {
+            if (appMapForRank.containsKey(appData.appId)) {
+                appMapForRank.get(appData.appId).add(appData);
+            } else {
+                List<AppData> newList = new LinkedList<>();
+                newList.add(appData);
+                appMapForRank.put(appData.appId, newList);
+            }
+        }
     }
 
     //构建评论数量变化检测的的HashMap,key值为app id, value值为该app在数据库中的所有记录

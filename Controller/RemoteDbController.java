@@ -21,7 +21,7 @@ public class RemoteDbController {
             Class.forName(name);
             connection = DriverManager.getConnection(url, user, password);
             //connection test
-            System.out.println("Connect Success");
+            System.out.println("Remote Database Connect Success");
         } catch (Exception e) {
             e.printStackTrace();
         }

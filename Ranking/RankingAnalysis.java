@@ -452,7 +452,7 @@ public class RankingAnalysis {
             }
         }
 
-        if (duplicateCount >= DataController.RANK_MIN_NUM) {
+        if (duplicateCount >= dataController.RANK_MIN_NUM) {
             if (rankGroupMap.containsKey(outerAppId)) {
                 RankingGroup rankingGroup = rankGroupMap.get(outerAppId);
                 rankingGroup.getAppIdSet().add(innerAppId);

@@ -15,10 +15,14 @@ public class DbController {
     public static final String rankQuerySql = "select appId,rankType,currentVersion,currentVersionReleaseDate,userRatingCountForCurrentVersion,userRatingCount,date from Data.AppInfo where rankType='update' and appId=? order by date";
     public static final String insertTestSql = "insert into Data.RateNumTest (date,appA,appB,appC,avgA,avgB,avgC) values (?,?,?,?,?,?,?)";
     public static final String insertAppGroupSql = "insert into Data.AppGroup (groupId,appId) values (?,?)";
+    public static final String insertRankAppSql = "insert into Data.RankApp (rankMinNum,validAppAmount) values (?,?)";
+
     public Connection connection = null;
     public PreparedStatement rankNumQueryStmt = null;
     public PreparedStatement insertRateNumTestStmt = null;
     public PreparedStatement insertAppGroupStmt = null;
+    public PreparedStatement insertAppRankStmt = null;
+
 
     public DbController() {
         try {
@@ -47,6 +51,14 @@ public class DbController {
     public void setInsertRateNumTestStmt(String sql) {
         try {
             insertRateNumTestStmt = connection.prepareStatement(sql);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void setInsertRankAppStmt(String sql) {
+        try {
+            insertAppRankStmt = connection.prepareStatement(sql);
         } catch (Exception e) {
             e.printStackTrace();
         }
