@@ -14,7 +14,7 @@ import java.util.*;
 
 public class RankingAnalysis {
     public TreeMap<String, RankingGroup> rankGroupMap = new TreeMap<>();
-    private DataController dataController;
+    public DataController dataController;
     private List<RankingGroup> groupList = new LinkedList<>();
     private TreeMap<Date, Set<RankingGroup>> endDayMap = new TreeMap<>();
     private TreeMap<Date, Set<RankingGroup>> beginDayMap = new TreeMap<>();
@@ -482,7 +482,7 @@ public class RankingAnalysis {
 
                 List outerList = (List) outerEntry.getValue();
                 List innerList = (List) innerEntry.getValue();
-                rankPatternCombineTest(outerList, outerId, innerList, innerId,minimum);
+                rankPatternCombineTest(outerList, outerId, innerList, innerId, minimum);
             }
         }
     }
@@ -505,7 +505,6 @@ public class RankingAnalysis {
                     duplicateCount++;
             }
         }
-
         if (duplicateCount >= minimum) {
             if (rankGroupMap.containsKey(outerAppId)) {
                 RankingGroup rankingGroup = rankGroupMap.get(outerAppId);

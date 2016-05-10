@@ -19,7 +19,7 @@ public class RatingAnalysis {
     public int adjustDayDiff = 3;
     private DataController dataController;
     private Map<String, List<AppData>> appDataMap;
-    private Map<String, HashMap<Date, Double>> rateRecordMap = new HashMap<>();
+    public Map<String, HashMap<Date, Double>> rateRecordMap = new HashMap<>();
 
 //    public RatingAnalysis() {
 //        DataController dataController = new DataController();
@@ -45,7 +45,7 @@ public class RatingAnalysis {
         Print.printEachGroupSize(ratingAnalysis.ratingGroupMap);
     }
 
-    public void buildDiffRecordMap() {
+    public Map buildDiffRecordMap() {
         Iterator iterator = appDataMap.entrySet().iterator();
         DateComparator dateComparator = new DateComparator();
         while (iterator.hasNext()) {
@@ -64,10 +64,7 @@ public class RatingAnalysis {
             //System.out.println(appId + " " + rateDiffRecordMap.size());
             rateRecordMap.put(appId, rateDiffRecordMap);
         }
-
-//        System.out.println("--------------------------------");
-//        System.out.println("有评分变化的APP数" + rateRecordMap.size());
-//        System.out.println("--------------------------------");
+        return  rateRecordMap;
     }
 
     private void makeGroup(HashMap<Date, Double> outerMap, String outerAppId,

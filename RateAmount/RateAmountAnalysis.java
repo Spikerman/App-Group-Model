@@ -68,7 +68,7 @@ public class RateAmountAnalysis {
     }
 
     //生成评论差值的hash map, key 是app Id, value是存储着每天差值记录rateAmountDiffRecord的集合
-    public void buildDiffRecordMap() {
+    public Map buildDiffRecordMap() {
         Iterator iterator = appDataMap.keySet().iterator();
         HashMap<Date, RateAmountDiffRecord> map;
         while (iterator.hasNext()) {
@@ -76,6 +76,8 @@ public class RateAmountAnalysis {
             map = generateDiffSet(appId);
             diffRecordMap.put(appId, map);
         }
+        return diffRecordMap;
+
     }
 
     //根据输入的app id 值,得到每天评论的差值集合,比如2号-1号,3号-2号...构成的集合

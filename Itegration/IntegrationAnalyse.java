@@ -35,7 +35,7 @@ public class IntegrationAnalyse {
 
     public static void main(String args[]) {
         IntegrationAnalyse integrationAnalyse = new IntegrationAnalyse();
-        integrationAnalyse.getAllMaps(0.8, 0.8, 0.8).integrateGroup(0.8);
+        integrationAnalyse.getRecordMaps(0.8, 0.8, 0.8).integrateGroup(0.8);
         System.out.println("三组指标集成后的总数: " + integrationAnalyse.groupSet.size());
 
         //System.out.println("递归合并...");
@@ -55,7 +55,7 @@ public class IntegrationAnalyse {
         return groupSet.size();
     }
 
-    private IntegrationAnalyse getAllMaps(double rankRate, double rateNumRate, double ratingRate) {
+    private IntegrationAnalyse getRecordMaps(double rankRate, double rateNumRate, double ratingRate) {
 
         //获取评分榜指标数据
         ratingAnalysis.buildDiffRecordMap();
