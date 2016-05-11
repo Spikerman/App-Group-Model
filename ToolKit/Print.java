@@ -20,4 +20,16 @@ public class Print {
             System.out.println(group.getAppSize());
         }
     }
+
+    public static void printEachGroupSize(Map<String, RankingGroup> groupMap, int size) {
+        Map map = groupMap;
+        Set set = map.entrySet();
+        Iterator iterator = set.iterator();
+        while (iterator.hasNext()) {
+            Map.Entry entry = (Map.Entry) iterator.next();
+            RankingGroup group = (RankingGroup) entry.getValue();
+            if (group.getAppSize() > size)
+                System.out.println(group.getAppSize());
+        }
+    }
 }

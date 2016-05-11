@@ -47,7 +47,7 @@ public class IndicatorIntegration {
 
         System.out.println("--------------------------------------------------------------------");
 
-        Print.printEachGroupSize(indicatorIntegration.candidateGroupMap);
+        Print.printEachGroupSize(indicatorIntegration.candidateGroupMap,20);
         //导出数据到远程数据库
         //integrationAnalyse.exportGroupData();
     }
@@ -64,7 +64,7 @@ public class IndicatorIntegration {
         Object[] innerArray = rankRecordMap.entrySet().toArray();
 
         for (int i = 0; i < outerArray.length; i++) {
-            for (int j = i + 1; j < innerArray.length; j++) {
+            for (int j = 0; j < innerArray.length; j++) {
                 Map.Entry outerEntry = (Map.Entry) outerArray[i];
                 Map.Entry innerEntry = (Map.Entry) innerArray[j];
                 pairwiseCalculation(outerEntry, innerEntry);
