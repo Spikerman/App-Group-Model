@@ -13,7 +13,7 @@ import java.util.*;
  */
 public class DataController {
 
-    public int RANK_MIN_NUM = 8;
+    public int RANK_MIN_NUM = 15;
     public int RATE_NUM_MIN_NUM = 8;
     public int RATING_MIN_NUM = 4;
 
@@ -355,7 +355,7 @@ public class DataController {
                 total++;
         }
 
-        System.out.println(minimum+"  "+ total);
+        System.out.println(minimum + "  " + total);
         try {
 
             dbController.insertAppRankStmt.setInt(1, minimum);
@@ -367,7 +367,7 @@ public class DataController {
 
     }
 
-    public void constructRankAppMap(){
+    public void constructRankAppMap() {
         for (AppData appData : appDataRecordListForRank) {
             if (appMapForRank.containsKey(appData.appId)) {
                 appMapForRank.get(appData.appId).add(appData);

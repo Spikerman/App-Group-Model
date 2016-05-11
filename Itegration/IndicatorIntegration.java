@@ -2,11 +2,13 @@ package Itegration;
 
 import Controller.DataController;
 import DataModel.AppData;
+import DataModel.RankingGroup;
 import DataModel.RateAmountDiffRecord;
 import Ranking.RankingAnalysis;
 import RateAmount.RateAmountAnalysis;
 import Rating.RatingAnalysis;
 import ToolKit.DateFormat;
+import ToolKit.Print;
 import com.google.common.collect.Sets;
 
 import java.util.*;
@@ -15,7 +17,8 @@ import java.util.*;
  * Created by chenhao on 5/10/16.
  */
 public class IndicatorIntegration {
-    public Set<Set<String>> groupSet = new HashSet<>();
+    public int count = 0;
+    Map<String, RankingGroup> candidateGroupMap = new HashMap<>();
     private RankingAnalysis rankingAnalysis;
     private RateAmountAnalysis rateAmountAnalysis;
     private RatingAnalysis ratingAnalysis;
@@ -23,7 +26,7 @@ public class IndicatorIntegration {
     private Map<String, HashMap<Date, Double>> ratingRecordMap;
     private Map<String, HashMap<Date, RateAmountDiffRecord>> rateVolumeRecordMap;
     private DataController dataController;
-    private int adjustDayDiff = 3;
+    private int adjustDayDiff = 4;
 
     public IndicatorIntegration() {
         dataController = new DataController();
@@ -36,16 +39,19 @@ public class IndicatorIntegration {
     public static void main(String args[]) {
         IndicatorIntegration indicatorIntegration = new IndicatorIntegration();
         indicatorIntegration.getRecordMaps();
+        indicatorIntegration.groupConstruction();
+        System.out.println(indicatorIntegration.candidateGroupMap.size());
+        System.out.println("递归合并");
+        indicatorIntegration.mapRecursiveCombine(0.8);
+        System.out.println(indicatorIntegration.candidateGroupMap.size());
 
-        System.out.print("hello");
+        System.out.println("--------------------------------------------------------------------");
 
+        Print.printEachGroupSize(indicatorIntegration.candidateGroupMap);
         //导出数据到远程数据库
         //integrationAnalyse.exportGroupData();
     }
 
-    public int getGroupSetSize() {
-        return groupSet.size();
-    }
 
     private void getRecordMaps() {
         rankRecordMap = rankingAnalysis.dataController.getAppMapForRank();
@@ -61,13 +67,6 @@ public class IndicatorIntegration {
             for (int j = i + 1; j < innerArray.length; j++) {
                 Map.Entry outerEntry = (Map.Entry) outerArray[i];
                 Map.Entry innerEntry = (Map.Entry) innerArray[j];
-
-                String outerId = outerEntry.getKey().toString();
-                String innerId = innerEntry.getKey().toString();
-
-                List outerList = (List) outerEntry.getValue();
-                List innerList = (List) innerEntry.getValue();
-
                 pairwiseCalculation(outerEntry, innerEntry);
             }
         }
@@ -77,8 +76,11 @@ public class IndicatorIntegration {
 
         String outerId = outerEntry.getKey().toString();
         String innerId = innerEntry.getKey().toString();
+
         int rankCount = 0;
         int ratingCount = 0;
+        int volumeCount = 0;
+
         //ranking
         List<AppData> outerList = (List) outerEntry.getValue();
         List<AppData> innerList = (List) innerEntry.getValue();
@@ -88,9 +90,10 @@ public class IndicatorIntegration {
         HashMap<Date, Double> innerRatingMap = (HashMap) ratingRecordMap.get(innerId);
 
         //review volume
-        HashMap outerVolumeMap = (HashMap) rateVolumeRecordMap.get(outerId);
-        HashMap innerVolumeMap = (HashMap) rateVolumeRecordMap.get(innerId);
+        HashMap<Date, RateAmountDiffRecord> outerVolumeMap = (HashMap) rateVolumeRecordMap.get(outerId);
+        HashMap<Date, RateAmountDiffRecord> innerVolumeMap = (HashMap) rateVolumeRecordMap.get(innerId);
 
+        //rank
         for (int i = 0; i < outerList.size(); i++) {
             for (int j = 0; j < innerList.size(); j++) {
                 AppData appA = outerList.get(i);
@@ -100,12 +103,11 @@ public class IndicatorIntegration {
             }
         }
 
+        //rating
         Set<Date> outerDateSet = outerRatingMap.keySet();
         Set<Date> innerDateSet = innerRatingMap.keySet();
         Set<Date> shareDateSet = (Set) Sets.intersection(outerDateSet, innerDateSet);
         Set<Date> commonDateSet = new HashSet<>();
-
-
         for (Date date : shareDateSet) {
             Double outerRateDiff = outerRatingMap.get(date);
             Double innerRateDiff = innerRatingMap.get(date);
@@ -118,7 +120,92 @@ public class IndicatorIntegration {
             }
         }
 
+        //review volume
+        double outerAppAvgDiffNum = rateAmountAnalysis.appMetaDataMap.get(outerId).averageDailyRateNum;
+        double innerAppAvgDiffNum = rateAmountAnalysis.appMetaDataMap.get(innerId).averageDailyRateNum;
+        Set<Date> outerDateSetV = outerVolumeMap.keySet();
+        Set<Date> innerDateSetV = innerVolumeMap.keySet();
+        Set<Date> shareDateSetV = (Set) Sets.intersection(outerDateSetV, innerDateSetV);
+        for (Date date : shareDateSetV) {
+            RateAmountDiffRecord outerDiffRecord = outerVolumeMap.get(date);
+            RateAmountDiffRecord innerDiffRecord = innerVolumeMap.get(date);
+            if ((outerDiffRecord.amountDiff > outerAppAvgDiffNum && innerDiffRecord.amountDiff > innerAppAvgDiffNum))
+                volumeCount++;
+        }
 
+        boolean rankFlag = false;
+        boolean ratingFlag = false;
+        boolean volumeFlag = false;
+
+        if (rankCount > dataController.RANK_MIN_NUM)
+            rankFlag = true;
+        if (ratingCount > dataController.RATING_MIN_NUM)
+            ratingFlag = true;
+        if (volumeCount > dataController.RATE_NUM_MIN_NUM)
+            volumeFlag = true;
+
+        if (rankFlag || (ratingFlag && volumeFlag)) {
+            if (candidateGroupMap.containsKey(outerId)) {
+                RankingGroup rankingGroup = candidateGroupMap.get(outerId);
+                rankingGroup.getAppIdSet().add(innerId);
+            } else {
+                RankingGroup newGroup = new RankingGroup();
+                newGroup.getAppIdSet().add(outerId);
+                newGroup.getAppIdSet().add(innerId);
+                candidateGroupMap.put(outerId, newGroup);
+            }
+
+        }
+    }
+
+    public void mapRecursiveCombine(double rate) {
+        boolean hasDuplicateSet = false;
+        Object[] outerIdSet = candidateGroupMap.keySet().toArray();
+        Object[] innerIdSet = candidateGroupMap.keySet().toArray();
+
+        for (int i = 0; i < outerIdSet.length; i++) {
+            for (int j = i + 1; j < innerIdSet.length; j++) {
+                String outerId = outerIdSet[i].toString();
+                String innerId = innerIdSet[j].toString();
+
+                Set<String> outerSet;
+                Set<String> innerSet;
+                if (candidateGroupMap.containsKey(outerId) && candidateGroupMap.containsKey(innerId)) {
+                    outerSet = candidateGroupMap.get(outerId).getAppIdSet();
+                    innerSet = candidateGroupMap.get(innerId).getAppIdSet();
+
+                    int outerGroupSize = outerSet.size();
+                    int innerGroupSize = innerSet.size();
+
+                    if (outerSet.containsAll(innerSet)
+                            || innerSet.containsAll(outerSet)
+                            || enableCombine(innerSet, outerSet, rate)) {
+                        if (outerGroupSize > innerGroupSize) {
+                            outerSet.addAll(innerSet);
+                            candidateGroupMap.remove(innerId);
+
+                        } else {
+                            innerSet.addAll(outerSet);
+                            candidateGroupMap.remove(outerId);
+                        }
+                        hasDuplicateSet = true;
+                    }
+                }
+            }
+        }
+
+        if (hasDuplicateSet)
+            mapRecursiveCombine(rate);
+    }
+
+    private boolean enableCombine(Set<String> setA, Set<String> setB, double rate) {
+        Set<String> unionSet = Sets.union(setA, setB);
+        Set<String> intersectionSet = Sets.intersection(setA, setB);
+
+        double unionSize = unionSet.size();
+        double intersectionSize = intersectionSet.size();
+
+        return (intersectionSize / unionSize) >= rate;
     }
 
 

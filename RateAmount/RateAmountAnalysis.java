@@ -27,7 +27,7 @@ public class RateAmountAnalysis {
     //或者去元素含量小的一组Key值进行循环遍历
     private Map<String, List<AppData>> appDataMap = new HashMap<>();
     private Map<String, HashMap<Date, RateAmountDiffRecord>> diffRecordMap = new HashMap<>();
-    private Map<String, AppData> appMetaDataMap;
+    public Map<String, AppData> appMetaDataMap;
 
     public RateAmountAnalysis(DataController dataController) {
         this.dataController = dataController;
@@ -208,11 +208,6 @@ public class RateAmountAnalysis {
         for (Date date : shareDateSet) {
             RateAmountDiffRecord outerDiffRecord = outerMap.get(date);
             RateAmountDiffRecord innerDiffRecord = innerMap.get(date);
-//// TODO: 4/16/16 只判断相同的日期超过平均值的数
-//            if ((outerDiffRecord.amountDiff > outerAppAvgDiffNum && innerDiffRecord.amountDiff > innerAppAvgDiffNum)
-//                    || (outerDiffRecord.amountDiff < outerAppAvgDiffNum && innerDiffRecord.amountDiff < innerAppAvgDiffNum
-//                    && outerDiffRecord.amountDiff > 0 && innerDiffRecord.amountDiff > 0))
-
             if ((outerDiffRecord.amountDiff > outerAppAvgDiffNum && innerDiffRecord.amountDiff > innerAppAvgDiffNum))
                 duplicateCount++;
         }
