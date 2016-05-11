@@ -45,6 +45,7 @@ public class RatingAnalysis {
         Print.printEachGroupSize(ratingAnalysis.ratingGroupMap);
     }
 
+
     public Map buildDiffRecordMap() {
         Iterator iterator = appDataMap.entrySet().iterator();
         DateComparator dateComparator = new DateComparator();
