@@ -1,4 +1,4 @@
-package Itegration;
+package Testing;
 
 import Controller.DataController;
 import DataModel.AppData;
@@ -8,19 +8,19 @@ import Ranking.RankingAnalysis;
 import RateAmount.RateAmountAnalysis;
 import Rating.RatingAnalysis;
 import ToolKit.DateFormat;
-import ToolKit.Print;
 import com.google.common.collect.Sets;
 
 import java.util.*;
 
 /**
- * Created by chenhao on 5/10/16.
+ * Created by chenhao on 5/3/16.
  */
-
-
-public class IndicatorIntegration {
+public class RankingSimilarityPair {
     public int count = 0;
     public Set<Set<String>> groupSet = new HashSet<>();
+    public Map<Integer, Integer> rankDt = new TreeMap<>();
+    public Map<Integer, Integer> ratingDt = new TreeMap<>();
+    public Map<Integer, Integer> volumeDt = new TreeMap<>();
     Map<String, RankingGroup> candidateGroupMap = new HashMap<>();
     private RankingAnalysis rankingAnalysis;
     private RateAmountAnalysis rateAmountAnalysis;
@@ -29,15 +29,10 @@ public class IndicatorIntegration {
     private Map<String, HashMap<Date, Double>> ratingRecordMap;
     private Map<String, HashMap<Date, RateAmountDiffRecord>> rateVolumeRecordMap;
     private DataController dataController;
-    private int adjustDayDiff = 4;
+    private int adjustDayDiff = 3;
 
-
-    public IndicatorIntegration() {
+    public RankingSimilarityPair() {
         dataController = new DataController();
-
-        System.out.println("rank " + dataController.RANK_MIN_NUM);
-        System.out.println("rating " + dataController.RATE_NUM_MIN_NUM);
-        System.out.println("review volume " + dataController.RATE_NUM_MIN_NUM);
 
         //ranking 必须第一个构造,创建rankAppPool
         rankingAnalysis = new RankingAnalysis(dataController);
@@ -46,22 +41,13 @@ public class IndicatorIntegration {
     }
 
     public static void main(String args[]) {
-        IndicatorIntegration indicatorIntegration = new IndicatorIntegration();
-        indicatorIntegration.getRecordMaps();
-        indicatorIntegration.groupConstruction();
-        System.out.println(indicatorIntegration.candidateGroupMap.size());
-        System.out.println("递归合并");
-        indicatorIntegration.mapRecursiveCombine(0.8);
-        System.out.println(indicatorIntegration.candidateGroupMap.size());
+        RankingSimilarityPair rankingSimilarityPair = new RankingSimilarityPair();
+        rankingSimilarityPair.getRecordMaps();
+        rankingSimilarityPair.startCalculate();
 
-        System.out.println("--------------------------------------------------------------------");
+        rankingSimilarityPair.exportGroupData();
 
-        Print.printEachGroupSize(indicatorIntegration.candidateGroupMap, 30);
-
-        //导出数据到远程数据库
-        //integrationAnalyse.exportGroupData();
     }
-
 
     private void getRecordMaps() {
         rankRecordMap = rankingAnalysis.dataController.getAppMapForRank();
@@ -69,7 +55,7 @@ public class IndicatorIntegration {
         rateVolumeRecordMap = rateAmountAnalysis.buildDiffRecordMap();
     }
 
-    public void groupConstruction() {
+    public void startCalculate() {
         Object[] outerArray = rankRecordMap.entrySet().toArray();
         Object[] innerArray = rankRecordMap.entrySet().toArray();
 
@@ -77,12 +63,12 @@ public class IndicatorIntegration {
             for (int j = 0; j < innerArray.length; j++) {
                 Map.Entry outerEntry = (Map.Entry) outerArray[i];
                 Map.Entry innerEntry = (Map.Entry) innerArray[j];
-                pairwiseCalculation(outerEntry, innerEntry);
+                pairwiseDistribution(outerEntry, innerEntry);
             }
         }
     }
 
-    public void pairwiseCalculation(Map.Entry outerEntry, Map.Entry innerEntry) {
+    public void pairwiseDistribution(Map.Entry outerEntry, Map.Entry innerEntry) {
 
         String outerId = outerEntry.getKey().toString();
         String innerId = innerEntry.getKey().toString();
@@ -139,94 +125,36 @@ public class IndicatorIntegration {
         for (Date date : shareDateSetV) {
             RateAmountDiffRecord outerDiffRecord = outerVolumeMap.get(date);
             RateAmountDiffRecord innerDiffRecord = innerVolumeMap.get(date);
-            if ((outerDiffRecord.amountDiff > outerAppAvgDiffNum && innerDiffRecord.amountDiff > innerAppAvgDiffNum))
+            if (((outerDiffRecord.amountDiff/outerAppAvgDiffNum>1.3) && (innerDiffRecord.amountDiff/innerAppAvgDiffNum>1.3)))
                 volumeCount++;
         }
 
-        boolean rankFlag = false;
-        boolean ratingFlag = false;
-        boolean volumeFlag = false;
-
-        if (rankCount > dataController.RANK_MIN_NUM)
-            rankFlag = true;
-        if (ratingCount > dataController.RATING_MIN_NUM)
-            ratingFlag = true;
-        if (volumeCount > dataController.RATE_NUM_MIN_NUM)
-            volumeFlag = true;
-
-        if (rankFlag || (ratingFlag && volumeFlag)) {
-            if (candidateGroupMap.containsKey(outerId)) {
-                RankingGroup rankingGroup = candidateGroupMap.get(outerId);
-                rankingGroup.getAppIdSet().add(innerId);
-            } else {
-                RankingGroup newGroup = new RankingGroup();
-                newGroup.getAppIdSet().add(outerId);
-                newGroup.getAppIdSet().add(innerId);
-                candidateGroupMap.put(outerId, newGroup);
-            }
-
-        }
-    }
-
-    public void mapRecursiveCombine(double rate) {
-        boolean hasDuplicateSet = false;
-        Object[] outerIdSet = candidateGroupMap.keySet().toArray();
-        Object[] innerIdSet = candidateGroupMap.keySet().toArray();
-
-        for (int i = 0; i < outerIdSet.length; i++) {
-            for (int j = i + 1; j < innerIdSet.length; j++) {
-                String outerId = outerIdSet[i].toString();
-                String innerId = innerIdSet[j].toString();
-
-                Set<String> outerSet;
-                Set<String> innerSet;
-                if (candidateGroupMap.containsKey(outerId) && candidateGroupMap.containsKey(innerId)) {
-                    outerSet = candidateGroupMap.get(outerId).getAppIdSet();
-                    innerSet = candidateGroupMap.get(innerId).getAppIdSet();
-
-                    int outerGroupSize = outerSet.size();
-                    int innerGroupSize = innerSet.size();
-
-                    if (outerSet.containsAll(innerSet)
-                            || innerSet.containsAll(outerSet)
-                            || enableCombine(innerSet, outerSet, rate)) {
-                        if (outerGroupSize > innerGroupSize) {
-                            outerSet.addAll(innerSet);
-                            candidateGroupMap.remove(innerId);
-
-                        } else {
-                            innerSet.addAll(outerSet);
-                            candidateGroupMap.remove(outerId);
-                        }
-                        hasDuplicateSet = true;
-                    }
-                }
-            }
+        if (rankDt.containsKey(rankCount)) {
+            Integer x = (Integer) rankDt.get(rankCount);
+            x++;
+            rankDt.put(rankCount, x);
+        } else {
+            rankDt.put(rankCount, 1);
         }
 
-        if (hasDuplicateSet)
-            mapRecursiveCombine(rate);
-    }
-
-    public void makeGroupSet(int size) {
-        Object[] groupArray = candidateGroupMap.entrySet().toArray();
-        for (int i = 0; i < groupArray.length; i++) {
-            Map.Entry entry = (Map.Entry) groupArray[i];
-            Set<String> idSet = ((RankingGroup) entry.getValue()).getAppIdSet();
-            groupSet.add(idSet);
+        if (ratingDt.containsKey(ratingCount)) {
+            Integer x = (Integer) ratingDt.get(ratingCount);
+            x++;
+            ratingDt.put(ratingCount, x);
+        } else {
+            ratingDt.put(ratingCount, 1);
         }
+
+        if (volumeDt.containsKey(volumeCount)) {
+            Integer x = (Integer) volumeDt.get(volumeCount);
+            x++;
+            volumeDt.put(volumeCount, x);
+        } else {
+            volumeDt.put(volumeCount, 1);
+        }
+
+
     }
-
-    private boolean enableCombine(Set<String> setA, Set<String> setB, double rate) {
-        Set<String> unionSet = Sets.union(setA, setB);
-        Set<String> intersectionSet = Sets.intersection(setA, setB);
-
-        double unionSize = unionSet.size();
-        double intersectionSize = intersectionSet.size();
-
-        return (intersectionSize / unionSize) >= rate;
-    }
-
 
     private int approxEquals(HashMap<Date, Double> outerMap, HashMap<Date, Double> innerMap, Date date) {
         Double outerRateDiff;
@@ -248,45 +176,32 @@ public class IndicatorIntegration {
     public void exportGroupData() {
         System.out.println("------------------------");
         System.out.println("Start to export...");
-        Iterator groupIterator = groupSet.iterator();
-        Iterator appIdIterator;
-        int groupNum = 0;
-        while (groupIterator.hasNext()) {
-            Set<String> idSet = (Set<String>) groupIterator.next();
-            appIdIterator = idSet.iterator();
-            while (appIdIterator.hasNext()) {
-                String appId = (String) appIdIterator.next();
-                System.out.println(groupNum + "  " + appId);
-                dataController.exportAppGroupToDb(groupNum, appId);
+
+
+        for(int i=0;i<31;i++){
+            if(rankDt.containsKey(i)){
+                int y=rankDt.get(i);
+                dataController.insertDistribution(i,y,"rank");
+            }else{
+                dataController.insertDistribution(i,0,"rank");
             }
-            groupNum++;
+            if(ratingDt.containsKey(i)){
+                int y=ratingDt.get(i);
+                dataController.insertDistribution(i,y,"rating");
+            }else{
+                dataController.insertDistribution(i,0,"rating");
+            }
+
+            if(volumeDt.containsKey(i)){
+                int y=volumeDt.get(i);
+                dataController.insertDistribution(i,y,"volume");
+            }else{
+                dataController.insertDistribution(i,0,"volume");
+            }
+
         }
+
+
     }
+
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

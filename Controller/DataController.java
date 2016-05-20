@@ -13,7 +13,7 @@ import java.util.*;
  */
 public class DataController {
 
-    public int RANK_MIN_NUM = 15;
+    public int RANK_MIN_NUM = 8;
     public int RATE_NUM_MIN_NUM = 8;
     public int RATING_MIN_NUM = 4;
 
@@ -40,9 +40,14 @@ public class DataController {
         remoteDbController.setInsertAppGroupStmt(remoteDbController.insertAppGroupSql);
         dbController.setInsertAppGroupStmt(remoteDbController.insertAppGroupSql);
         dbController.setInsertRankAppStmt(DbController.insertRankAppSql);
+        dbController.setInsertDistributionStmt(DbController.insertDistributionSql);
         //System.out.println("RANK_MIN_NUM = " + RANK_MIN_NUM);
         //System.out.println("RATE_NUM_MIN_NUM = " + RATE_NUM_MIN_NUM);
         //System.out.println("RATING_MIN_NUM = " + RATING_MIN_NUM);
+    }
+
+    public DataController(String x){
+
     }
 
     public static void main(String args[]) {
@@ -367,6 +372,20 @@ public class DataController {
 
     }
 
+    //calculate the average unusual ranking float frequency
+    public double avgURF() {
+        double total = 0;
+        double avg = 0;
+        Iterator iterator = appMapForRank.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry entry = (Map.Entry) iterator.next();
+            List appDataList = (List) entry.getValue();
+            total += appDataList.size();
+            avg++;
+        }
+        return total / avg;
+    }
+
     public void constructRankAppMap() {
         for (AppData appData : appDataRecordListForRank) {
             if (appMapForRank.containsKey(appData.appId)) {
@@ -376,6 +395,17 @@ public class DataController {
                 newList.add(appData);
                 appMapForRank.put(appData.appId, newList);
             }
+        }
+    }
+
+    public void insertDistribution(int sim, int amount, String type) {
+        try {
+            dbController.insertDistributionStmt.setInt(1, sim);
+            dbController.insertDistributionStmt.setInt(2, amount);
+            dbController.insertDistributionStmt.setString(3, type);
+            dbController.insertDistributionStmt.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

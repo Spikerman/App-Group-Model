@@ -16,12 +16,14 @@ public class DbController {
     public static final String insertTestSql = "insert into Data.RateNumTest (date,appA,appB,appC,avgA,avgB,avgC) values (?,?,?,?,?,?,?)";
     public static final String insertAppGroupSql = "insert into Data.AppGroup (groupId,appId) values (?,?)";
     public static final String insertRankAppSql = "insert into Data.RankApp (rankMinNum,validAppAmount) values (?,?)";
+    public static final String insertDistributionSql = "insert into Data.Distribution (Sim,Amount,Type) values (?,?,?)";
 
     public Connection connection = null;
     public PreparedStatement rankNumQueryStmt = null;
     public PreparedStatement insertRateNumTestStmt = null;
     public PreparedStatement insertAppGroupStmt = null;
     public PreparedStatement insertAppRankStmt = null;
+    public PreparedStatement insertDistributionStmt = null;
 
 
     public DbController() {
@@ -29,7 +31,7 @@ public class DbController {
             Class.forName(name);
             connection = DriverManager.getConnection(url, user, password);
             //connection test
-            System.out.println("Connect Success");
+            System.out.println("Connect Database Success");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -67,6 +69,14 @@ public class DbController {
     public void setInsertAppGroupStmt(String sql) {
         try {
             insertAppGroupStmt = connection.prepareStatement(sql);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void setInsertDistributionStmt(String sql){
+        try {
+            insertDistributionStmt = connection.prepareStatement(sql);
         } catch (Exception e) {
             e.printStackTrace();
         }
