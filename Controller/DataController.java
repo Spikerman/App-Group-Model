@@ -33,7 +33,7 @@ public class DataController {
     private Set<String> rankAppIdPool = new HashSet<>();
 
     public DataController() {
-        //initial the rank query statement
+        //initial the rank query selectRevewSqlStmt
         dbController.setRankNumQueryStmt(DbController.rankQuerySql);
         dbController.setInsertRateNumTestStmt(DbController.insertTestSql);
         dbController.setInsertRateNumTestStmt(DbController.insertRankAppSql);

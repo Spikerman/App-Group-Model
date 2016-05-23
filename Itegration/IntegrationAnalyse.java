@@ -41,11 +41,15 @@ public class IntegrationAnalyse {
         //System.out.println("递归合并...");
         //integrationAnalyse.recursiveCombine(0.8);
         //System.out.println("递归合并后group size大小: " + integrationAnalyse.getGroupSetSize());
+        System.out.println("------------------------------------------");
+        integrationAnalyse.printAvg();
+        System.out.println("------------------------------------------");
 
         integrationAnalyse.filterData(30);
         System.out.println("过滤后group size大小: " + integrationAnalyse.getGroupSetSize());
         System.out.println("------------------------------------------");
         integrationAnalyse.printEachGroupSize();
+
 
         //导出数据到远程数据库
         //integrationAnalyse.exportGroupData();
@@ -232,7 +236,20 @@ public class IntegrationAnalyse {
             recursiveCombine(rate);
     }
 
+    public void printAvg() {
+        double avg = 0;
+        Iterator iterator = groupSet.iterator();
+        while (iterator.hasNext()) {
+            Set<String> set = (Set) iterator.next();
+            avg += set.size();
+        }
+
+        System.out.println(avg / groupSet.size());
+    }
+
     public void filterData(int limit) {
+
+
         Iterator iterator = groupSet.iterator();
         while (iterator.hasNext()) {
             Set<String> set = (Set) iterator.next();
@@ -338,8 +355,8 @@ public class IntegrationAnalyse {
                 groupSet.add(unionSet);
             } else {
                 groupSet.add(rankSet);
-               // groupSet.add(rateNumSet);
-               // groupSet.add(ratingSet);
+                // groupSet.add(rateNumSet);
+                // groupSet.add(ratingSet);
             }
         } else if (rateNumSet.size() >= rankSet.size() && rateNumSet.size() >= ratingSet.size()) {
             if (!rateNumSet.containsAll(rankSet) && !rateNumSet.containsAll(ratingSet)) {
@@ -371,9 +388,9 @@ public class IntegrationAnalyse {
             if (unionSet != null) {
                 groupSet.add(unionSet);
             } else {
-               groupSet.add(rankSet);
-               // groupSet.add(rateNumSet);
-               // groupSet.add(ratingSet);
+                groupSet.add(rankSet);
+                // groupSet.add(rateNumSet);
+                // groupSet.add(ratingSet);
             }
         }
     }

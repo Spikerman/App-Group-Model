@@ -21,6 +21,7 @@ import java.util.*;
 public class IndicatorIntegration {
     public int count = 0;
     public Set<Set<String>> groupSet = new HashSet<>();
+    public int collusivePairCount = 0;
     Map<String, RankingGroup> candidateGroupMap = new HashMap<>();
     private RankingAnalysis rankingAnalysis;
     private RateAmountAnalysis rateAmountAnalysis;
@@ -31,12 +32,11 @@ public class IndicatorIntegration {
     private DataController dataController;
     private int adjustDayDiff = 4;
 
-
     public IndicatorIntegration() {
         dataController = new DataController();
 
         System.out.println("rank " + dataController.RANK_MIN_NUM);
-        System.out.println("rating " + dataController.RATE_NUM_MIN_NUM);
+        System.out.println("rating " + dataController.RATING_MIN_NUM);
         System.out.println("review volume " + dataController.RATE_NUM_MIN_NUM);
 
         //ranking 必须第一个构造,创建rankAppPool
@@ -49,6 +49,8 @@ public class IndicatorIntegration {
         IndicatorIntegration indicatorIntegration = new IndicatorIntegration();
         indicatorIntegration.getRecordMaps();
         indicatorIntegration.groupConstruction();
+        System.out.println("pair count: " + indicatorIntegration.collusivePairCount);
+
         System.out.println(indicatorIntegration.candidateGroupMap.size());
         System.out.println("递归合并");
         indicatorIntegration.mapRecursiveCombine(0.8);
@@ -74,9 +76,10 @@ public class IndicatorIntegration {
         Object[] innerArray = rankRecordMap.entrySet().toArray();
 
         for (int i = 0; i < outerArray.length; i++) {
-            for (int j = 0; j < innerArray.length; j++) {
+            for (int j = i+1; j < innerArray.length; j++) {
                 Map.Entry outerEntry = (Map.Entry) outerArray[i];
                 Map.Entry innerEntry = (Map.Entry) innerArray[j];
+
                 pairwiseCalculation(outerEntry, innerEntry);
             }
         }
@@ -154,7 +157,9 @@ public class IndicatorIntegration {
         if (volumeCount > dataController.RATE_NUM_MIN_NUM)
             volumeFlag = true;
 
-        if (rankFlag || (ratingFlag && volumeFlag)) {
+        if (rankFlag || ratingFlag || volumeFlag) {
+
+            collusivePairCount++;
             if (candidateGroupMap.containsKey(outerId)) {
                 RankingGroup rankingGroup = candidateGroupMap.get(outerId);
                 rankingGroup.getAppIdSet().add(innerId);
