@@ -1,9 +1,11 @@
 package Itegration;
 
 import Controller.DataController;
+import Controller.DbController;
 import DataModel.AppData;
 import DataModel.RankingGroup;
 import DataModel.RateAmountDiffRecord;
+import FIM.FimController;
 import Ranking.RankingAnalysis;
 import RateAmount.RateAmountAnalysis;
 import Rating.RatingAnalysis;
@@ -19,25 +21,29 @@ import java.util.*;
 
 
 public class IndicatorIntegration {
-    public int count = 0;
     public Set<Set<String>> groupSet = new HashSet<>();
     public int collusivePairCount = 0;
-    Map<String, RankingGroup> candidateGroupMap = new HashMap<>();
+    public DataController dataController;
+    public int totalRankCount = 0;
+    public int totalRatingCount = 0;
+    public int totalReviewVolumeCount = 0;
+    Map<String, RankingGroup> candidateClusterMap = new HashMap<>();
     private RankingAnalysis rankingAnalysis;
     private RateAmountAnalysis rateAmountAnalysis;
     private RatingAnalysis ratingAnalysis;
     private Map<String, List<AppData>> rankRecordMap;
     private Map<String, HashMap<Date, Double>> ratingRecordMap;
     private Map<String, HashMap<Date, RateAmountDiffRecord>> rateVolumeRecordMap;
-    private DataController dataController;
-    private int adjustDayDiff = 4;
+    private int adjustDayDiff = 3;
 
     public IndicatorIntegration() {
         dataController = new DataController();
+        System.out.println("======================= 前置条件 ======================= ");
 
-        System.out.println("rank " + dataController.RANK_MIN_NUM);
-        System.out.println("rating " + dataController.RATING_MIN_NUM);
-        System.out.println("review volume " + dataController.RATE_NUM_MIN_NUM);
+        System.out.println("Unusual Ranking Float Frequency " + dataController.FREQUENCY);
+        System.out.println("Rank Threshold : " + dataController.RANK_MIN_NUM);
+        System.out.println("Rating Threshold : " + dataController.RATING_MIN_NUM);
+        System.out.println("Review Volume Threshold : " + dataController.RATE_NUM_MIN_NUM);
 
         //ranking 必须第一个构造,创建rankAppPool
         rankingAnalysis = new RankingAnalysis(dataController);
@@ -49,21 +55,37 @@ public class IndicatorIntegration {
         IndicatorIntegration indicatorIntegration = new IndicatorIntegration();
         indicatorIntegration.getRecordMaps();
         indicatorIntegration.groupConstruction();
-        System.out.println("pair count: " + indicatorIntegration.collusivePairCount);
+        double jaccardValue = 0.6;
+        int candidateSize = 10;
 
-        System.out.println(indicatorIntegration.candidateGroupMap.size());
-        System.out.println("递归合并");
-        indicatorIntegration.mapRecursiveCombine(0.8);
-        System.out.println(indicatorIntegration.candidateGroupMap.size());
+        System.out.println("===================== App Pair ============================ ");
+        System.out.println("Collusive pair count: " + indicatorIntegration.collusivePairCount);
+        System.out.println("Total rank pair count : " + indicatorIntegration.totalRankCount);
+        System.out.println("Total rating pair count : " + indicatorIntegration.totalRatingCount);
+        System.out.println("Total review volume pair count: " + indicatorIntegration.totalReviewVolumeCount);
 
-        System.out.println("--------------------------------------------------------------------");
+        System.out.println("====================== CandidateClusterCapture 算法 =========================== ");
 
-        Print.printEachGroupSize(indicatorIntegration.candidateGroupMap, 30);
+        System.out.println("递归合并前candidate cluster数 : " + indicatorIntegration.candidateClusterMap.size());
+        indicatorIntegration.mapRecursiveCombine(jaccardValue);
+        System.out.println("Jaccard Similarity value : " + jaccardValue);
+        System.out.println("递归合并后candidate cluster数 : " + indicatorIntegration.candidateClusterMap.size());
+
+        System.out.println("========================= Candidate Cluster ================================ ");
+
+
+        System.out.println("candidate size 限制 : " + candidateSize);
+
+        DbController db = new DbController();
+        FimController fimController = new FimController(db);
+        fimController.loadCandidateCluster();
+
+        Set totalAppCount = Print.printEachGroupSize(indicatorIntegration.candidateClusterMap, candidateSize);
+        indicatorIntegration.duplicateCount(totalAppCount, fimController, candidateSize);
 
         //导出数据到远程数据库
         //integrationAnalyse.exportGroupData();
     }
-
 
     private void getRecordMaps() {
         rankRecordMap = rankingAnalysis.dataController.getAppMapForRank();
@@ -71,15 +93,42 @@ public class IndicatorIntegration {
         rateVolumeRecordMap = rateAmountAnalysis.buildDiffRecordMap();
     }
 
+    //计算原有APP与新试验结果的差值,以记录试验需要增量更新的APP记录
+    public void duplicateCount(Set totalAppCount, FimController fimController, int candidateSize) {
+
+        Set originalClusterAppCount = new HashSet<>();
+        for (Map.Entry entry : fimController.appGroupMap.entrySet()) {
+            Set set = (Set) entry.getValue();
+            originalClusterAppCount.addAll(set);
+        }
+
+        for (Map.Entry entry : candidateClusterMap.entrySet()) {
+            RankingGroup group = (RankingGroup) entry.getValue();
+            Set cc = group.getAppIdSet();
+
+            if (originalClusterAppCount.containsAll(cc) && (cc.size() >= candidateSize)) {
+                System.out.println("Yes!!!");
+            }
+        }
+
+
+        System.out.println("original app count : " + originalClusterAppCount.size());
+        System.out.println("new app count : " + totalAppCount.size());
+        Set newSet = Sets.intersection(originalClusterAppCount, totalAppCount);
+        System.out.println("common app count : " + newSet.size());
+
+
+    }
+
+
     public void groupConstruction() {
         Object[] outerArray = rankRecordMap.entrySet().toArray();
         Object[] innerArray = rankRecordMap.entrySet().toArray();
 
         for (int i = 0; i < outerArray.length; i++) {
-            for (int j = i+1; j < innerArray.length; j++) {
+            for (int j = 0; j < innerArray.length; j++) {
                 Map.Entry outerEntry = (Map.Entry) outerArray[i];
                 Map.Entry innerEntry = (Map.Entry) innerArray[j];
-
                 pairwiseCalculation(outerEntry, innerEntry);
             }
         }
@@ -106,13 +155,16 @@ public class IndicatorIntegration {
         HashMap<Date, RateAmountDiffRecord> outerVolumeMap = (HashMap) rateVolumeRecordMap.get(outerId);
         HashMap<Date, RateAmountDiffRecord> innerVolumeMap = (HashMap) rateVolumeRecordMap.get(innerId);
 
+        Set<Date> commonDate = new HashSet<>();
         //rank
         for (int i = 0; i < outerList.size(); i++) {
             for (int j = 0; j < innerList.size(); j++) {
                 AppData appA = outerList.get(i);
                 AppData appB = innerList.get(j);
-                if (appA.rankType.equals(appB.rankType) && appA.date.equals(appB.date))
+                if ((appA.rankType.equals(appB.rankType) && appA.date.equals(appB.date)) && !commonDate.contains(appA.date)) {
                     rankCount++;
+                    commonDate.add(appA.date);
+                }
             }
         }
 
@@ -125,7 +177,7 @@ public class IndicatorIntegration {
             Double outerRateDiff = outerRatingMap.get(date);
             Double innerRateDiff = innerRatingMap.get(date);
             //相同日起时,两个APP的变化趋势相同
-            if (outerRateDiff * innerRateDiff > 0) {
+            if ((outerRateDiff > 0) && (innerRateDiff > 0)) {
                 ratingCount++;
                 commonDateSet.add(date);
             } else {
@@ -142,7 +194,12 @@ public class IndicatorIntegration {
         for (Date date : shareDateSetV) {
             RateAmountDiffRecord outerDiffRecord = outerVolumeMap.get(date);
             RateAmountDiffRecord innerDiffRecord = innerVolumeMap.get(date);
-            if ((outerDiffRecord.amountDiff > outerAppAvgDiffNum && innerDiffRecord.amountDiff > innerAppAvgDiffNum))
+            boolean outerSurgeFlag = false;
+            boolean innerSurgeFlag = false;
+
+            double outer = (double) outerDiffRecord.amountDiff / (double) outerAppAvgDiffNum;
+            double inner = (double) innerDiffRecord.amountDiff / (double) innerAppAvgDiffNum;
+            if (outer > 1.2 && inner > 1.2)
                 volumeCount++;
         }
 
@@ -150,24 +207,32 @@ public class IndicatorIntegration {
         boolean ratingFlag = false;
         boolean volumeFlag = false;
 
-        if (rankCount > dataController.RANK_MIN_NUM)
+
+        if (rankCount > dataController.RANK_MIN_NUM) {
+            totalRankCount += rankCount;
             rankFlag = true;
-        if (ratingCount > dataController.RATING_MIN_NUM)
+        }
+        if (ratingCount > dataController.RATING_MIN_NUM) {
+            totalRatingCount += ratingCount;
             ratingFlag = true;
-        if (volumeCount > dataController.RATE_NUM_MIN_NUM)
+        }
+        if (volumeCount > dataController.RATE_NUM_MIN_NUM) {
+            totalReviewVolumeCount += volumeCount;
             volumeFlag = true;
+        }
 
-        if (rankFlag || ratingFlag || volumeFlag) {
+        //if ((rankFlag && ratingFlag) || (volumeFlag && rankFlag) || (volumeFlag && ratingFlag))
 
+        if (rankFlag && rankFlag && volumeFlag) {
             collusivePairCount++;
-            if (candidateGroupMap.containsKey(outerId)) {
-                RankingGroup rankingGroup = candidateGroupMap.get(outerId);
+            if (candidateClusterMap.containsKey(outerId)) {
+                RankingGroup rankingGroup = candidateClusterMap.get(outerId);
                 rankingGroup.getAppIdSet().add(innerId);
             } else {
                 RankingGroup newGroup = new RankingGroup();
                 newGroup.getAppIdSet().add(outerId);
                 newGroup.getAppIdSet().add(innerId);
-                candidateGroupMap.put(outerId, newGroup);
+                candidateClusterMap.put(outerId, newGroup);
             }
 
         }
@@ -175,8 +240,8 @@ public class IndicatorIntegration {
 
     public void mapRecursiveCombine(double rate) {
         boolean hasDuplicateSet = false;
-        Object[] outerIdSet = candidateGroupMap.keySet().toArray();
-        Object[] innerIdSet = candidateGroupMap.keySet().toArray();
+        Object[] outerIdSet = candidateClusterMap.keySet().toArray();
+        Object[] innerIdSet = candidateClusterMap.keySet().toArray();
 
         for (int i = 0; i < outerIdSet.length; i++) {
             for (int j = i + 1; j < innerIdSet.length; j++) {
@@ -185,9 +250,9 @@ public class IndicatorIntegration {
 
                 Set<String> outerSet;
                 Set<String> innerSet;
-                if (candidateGroupMap.containsKey(outerId) && candidateGroupMap.containsKey(innerId)) {
-                    outerSet = candidateGroupMap.get(outerId).getAppIdSet();
-                    innerSet = candidateGroupMap.get(innerId).getAppIdSet();
+                if (candidateClusterMap.containsKey(outerId) && candidateClusterMap.containsKey(innerId)) {
+                    outerSet = candidateClusterMap.get(outerId).getAppIdSet();
+                    innerSet = candidateClusterMap.get(innerId).getAppIdSet();
 
                     int outerGroupSize = outerSet.size();
                     int innerGroupSize = innerSet.size();
@@ -197,11 +262,11 @@ public class IndicatorIntegration {
                             || enableCombine(innerSet, outerSet, rate)) {
                         if (outerGroupSize > innerGroupSize) {
                             outerSet.addAll(innerSet);
-                            candidateGroupMap.remove(innerId);
+                            candidateClusterMap.remove(innerId);
 
                         } else {
                             innerSet.addAll(outerSet);
-                            candidateGroupMap.remove(outerId);
+                            candidateClusterMap.remove(outerId);
                         }
                         hasDuplicateSet = true;
                     }
@@ -214,7 +279,7 @@ public class IndicatorIntegration {
     }
 
     public void makeGroupSet(int size) {
-        Object[] groupArray = candidateGroupMap.entrySet().toArray();
+        Object[] groupArray = candidateClusterMap.entrySet().toArray();
         for (int i = 0; i < groupArray.length; i++) {
             Map.Entry entry = (Map.Entry) groupArray[i];
             Set<String> idSet = ((RankingGroup) entry.getValue()).getAppIdSet();

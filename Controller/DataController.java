@@ -13,9 +13,12 @@ import java.util.*;
  */
 public class DataController {
 
-    public int RANK_MIN_NUM = 8;
-    public int RATE_NUM_MIN_NUM = 8;
-    public int RATING_MIN_NUM = 4;
+    public int RANK_MIN_NUM = 5;
+    public int RATE_NUM_MIN_NUM = 5;
+    public int RATING_MIN_NUM = 5;
+
+    public int FREQUENCY=8;
+
 
     private DbController dbController = new DbController();
     private RemoteDbController remoteDbController = new RemoteDbController();
@@ -41,12 +44,9 @@ public class DataController {
         dbController.setInsertAppGroupStmt(remoteDbController.insertAppGroupSql);
         dbController.setInsertRankAppStmt(DbController.insertRankAppSql);
         dbController.setInsertDistributionStmt(DbController.insertDistributionSql);
-        //System.out.println("RANK_MIN_NUM = " + RANK_MIN_NUM);
-        //System.out.println("RATE_NUM_MIN_NUM = " + RATE_NUM_MIN_NUM);
-        //System.out.println("RATING_MIN_NUM = " + RATING_MIN_NUM);
     }
 
-    public DataController(String x){
+    public DataController(String x) {
 
     }
 
@@ -97,14 +97,12 @@ public class DataController {
     }
 
     public DataController getRankAppInfoFromDb() {
-        String selectSql = "SELECT * FROM Data.AppInfo Where(rankType in ('topFreeFlowDown','topFreeFlowUp' ,'topPaidFlowDown' ,'topPaidFlowUp'))";
+        String selectSql = "SELECT * FROM Data.AppInfo Where (rankType in ('topFreeFlowDown','topFreeFlowUp' ,'topPaidFlowDown' ,'topPaidFlowUp')) and date <'2016-04-13' ";
         Statement statement;
         ResultSet rs;
         try {
             statement = dbController.connection.createStatement();
-            System.out.println("start rank data fetch...");
             rs = statement.executeQuery(selectSql);
-            System.out.println("end rank data fetch...");
 
             while (rs.next()) {
                 AppData appData = new AppData();
@@ -113,7 +111,6 @@ public class DataController {
                 appData.ranking = rs.getInt("ranking");
                 appData.rankFloatNum = rs.getInt("rankFloatNum");
                 appData.date = DateFormat.timestampToMonthDayYear(rs.getTimestamp("date"));
-                //System.out.println(appData.appId + " " + appData.rankType + " " + appData.ranking + " " + appData.rankFloatNum + " " + appData.date);
                 appDataRecordListForRank.add((appData));
             }
 
@@ -188,9 +185,7 @@ public class DataController {
         Statement statement;
         try {
             statement = dbController.connection.createStatement();
-            System.out.println("start rate num data fetch");
             rs = statement.executeQuery(selectSql);
-            System.out.println("end rate num data fetch");
             while (rs.next()) {
                 AppData appData = new AppData();
                 appData.appId = rs.getString("appId");
@@ -292,9 +287,7 @@ public class DataController {
         Statement statement;
         try {
             statement = dbController.connection.createStatement();
-            System.out.println("start rate fetch...");
             rs = statement.executeQuery(selectSql);
-            System.out.println("end rate fetch!");
 
             while (rs.next()) {
                 AppData appData = new AppData();
@@ -321,6 +314,7 @@ public class DataController {
         }
     }
 
+    //todo  将原有list该为Map
     //build app map according to the app data list that fetch from the database
     public DataController buildAppDataMapForRank() {
         for (AppData appData : appDataRecordListForRank) {
@@ -332,22 +326,33 @@ public class DataController {
                 appMapForRank.put(appData.appId, newList);
             }
         }
-        System.out.println("数据库中的rank app总数: " + appMapForRank.size());
+
+        System.out.println("数据库中App总数 : " + appMapForRank.size());
 
         Iterator iterator = appMapForRank.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry entry = (Map.Entry) iterator.next();
             String appId = entry.getKey().toString();
             List appDataList = (List) entry.getValue();
-            if (appDataList.size() < RANK_MIN_NUM)
+            int frequency = rankFrequencyCount(appDataList);
+
+            if (frequency < FREQUENCY)
                 iterator.remove();
             else
                 rankAppIdPool.add(appId);
         }
-
-        System.out.println("符合rank条件的App数: " + appMapForRank.size());
+        System.out.println("Suspicious Promoted App 数 : " + appMapForRank.size());
         return this;
     }
+
+    private int rankFrequencyCount(List<AppData> entry) {
+        Set<Date> dateSet = new HashSet<>();
+        for (AppData appData : entry) {
+            dateSet.add(appData.date);
+        }
+        return dateSet.size();
+    }
+
 
     public void countValidAppAmount(int minimum) {
         int total = 0;

@@ -488,9 +488,7 @@ public class RankingAnalysis {
     }
 
 
-
-
-    public void rankPatternCombineTest(List<AppData> outerAppList, String outerAppId, List<AppData> innerAppList, String innerAppId,int minimum) {
+    public void rankPatternCombineTest(List<AppData> outerAppList, String outerAppId, List<AppData> innerAppList, String innerAppId, int minimum) {
 
         int duplicateCount = 0;
         Set<Date> dateSet = new HashSet<>();
@@ -540,7 +538,6 @@ public class RankingAnalysis {
             }
         }
     }
-
 
 
     //combine the generated app rank map, to remove the subset of some entry
