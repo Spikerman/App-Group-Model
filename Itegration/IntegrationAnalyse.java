@@ -52,7 +52,7 @@ public class IntegrationAnalyse {
 
 
         //导出数据到远程数据库
-        //integrationAnalyse.exportGroupData();
+        //integrationAnalyse.exportToDatabase();
     }
 
     public int getGroupSetSize() {
@@ -311,31 +311,31 @@ public class IntegrationAnalyse {
     private void combineGroup(Set<String> rankSet, Set<String> rateNumSet, Set<String> ratingSet, double rate) {
 //        if (rankSet.containsAll(rateNumSet)) {
 //            if (rankSet.containsAll(ratingSet)) {
-//                groupSet.add(rankSet);
+//                ccSet.add(rankSet);
 //                return true;
 //            } else {
 //                if (enableCombine(rankSet, ratingSet, rate)) {
-//                    groupSet.add(Sets.union(rankSet, ratingSet));
+//                    ccSet.add(Sets.union(rankSet, ratingSet));
 //                    return true;
 //                }
 //            }
 //        } else if (rateNumSet.containsAll(rankSet)) {
 //            if (rateNumSet.containsAll(ratingSet)) {
-//                groupSet.add(rateNumSet);
+//                ccSet.add(rateNumSet);
 //                return true;
 //            } else {
 //                if (enableCombine(rateNumSet, ratingSet, rate)) {
-//                    groupSet.add(Sets.union(rateNumSet, ratingSet));
+//                    ccSet.add(Sets.union(rateNumSet, ratingSet));
 //                    return true;
 //                }
 //            }
 //        } else if (ratingSet.containsAll(rankSet)) {
 //            if (ratingSet.containsAll(rateNumSet)) {
-//                groupSet.add(ratingSet);
+//                ccSet.add(ratingSet);
 //                return true;
 //            } else {
 //                if (enableCombine(rankSet, ratingSet, rate)) {
-//                    groupSet.add(Sets.union(rankSet, ratingSet));
+//                    ccSet.add(Sets.union(rankSet, ratingSet));
 //                    return true;
 //                }
 //            }
@@ -355,8 +355,8 @@ public class IntegrationAnalyse {
                 groupSet.add(unionSet);
             } else {
                 groupSet.add(rankSet);
-                // groupSet.add(rateNumSet);
-                // groupSet.add(ratingSet);
+                // ccSet.add(rateNumSet);
+                // ccSet.add(ratingSet);
             }
         } else if (rateNumSet.size() >= rankSet.size() && rateNumSet.size() >= ratingSet.size()) {
             if (!rateNumSet.containsAll(rankSet) && !rateNumSet.containsAll(ratingSet)) {
@@ -372,8 +372,8 @@ public class IntegrationAnalyse {
                 groupSet.add(unionSet);
             } else {
                 groupSet.add(rankSet);
-                //groupSet.add(rateNumSet);
-                //groupSet.add(ratingSet);
+                //ccSet.add(rateNumSet);
+                //ccSet.add(ratingSet);
             }
         } else {
             if (!ratingSet.containsAll(rankSet) && !ratingSet.containsAll(rateNumSet)) {
@@ -389,8 +389,8 @@ public class IntegrationAnalyse {
                 groupSet.add(unionSet);
             } else {
                 groupSet.add(rankSet);
-                // groupSet.add(rateNumSet);
-                // groupSet.add(ratingSet);
+                // ccSet.add(rateNumSet);
+                // ccSet.add(ratingSet);
             }
         }
     }

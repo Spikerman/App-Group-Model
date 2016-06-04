@@ -14,7 +14,10 @@ public class RemoteDbController {
     public static final String password = "grouptie123456";
     public Connection connection = null;
     public static final String insertAppGroupSql = "insert into Data.AppGroup (groupId,appId) values (?,?)";
+    public static final String insertCandidateClusterSql = "insert into Data.CandidateCluster (clusterId,appId) values (?,?)";
     public PreparedStatement insertAppGroupStmt = null;
+    public PreparedStatement insertCCStmt = null;
+
 
     public RemoteDbController() {
         try {
@@ -38,6 +41,16 @@ public class RemoteDbController {
             e.printStackTrace();
         }
     }
+
+    public void setInsertCCStmt(String sql) {
+        try {
+            insertCCStmt = connection.prepareStatement(sql);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
 
 
 

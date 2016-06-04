@@ -20,8 +20,8 @@ import java.util.*;
  */
 
 
-public class IndicatorIntegration {
-    public Set<Set<String>> groupSet = new HashSet<>();
+public class Framework {
+    public Set<Set<String>> ccSet = new HashSet<>();
     public int collusivePairCount = 0;
     public DataController dataController;
     public int totalRankCount = 0;
@@ -36,7 +36,7 @@ public class IndicatorIntegration {
     private Map<String, HashMap<Date, RateAmountDiffRecord>> rateVolumeRecordMap;
     private int adjustDayDiff = 3;
 
-    public IndicatorIntegration() {
+    public Framework() {
         dataController = new DataController();
         System.out.println("======================= 前置条件 ======================= ");
 
@@ -52,39 +52,43 @@ public class IndicatorIntegration {
     }
 
     public static void main(String args[]) {
-        IndicatorIntegration indicatorIntegration = new IndicatorIntegration();
-        indicatorIntegration.getRecordMaps();
-        indicatorIntegration.groupConstruction();
-        double jaccardValue = 0.6;
-        int candidateSize = 10;
+        Framework framework = new Framework();
+        framework.getRecordMaps();
+        framework.groupConstruction();
+        double jaccardValue = 0.5;
+
+        int candidateLimitSize = 8;
 
         System.out.println("===================== App Pair ============================ ");
-        System.out.println("Collusive pair count: " + indicatorIntegration.collusivePairCount);
-        System.out.println("Total rank pair count : " + indicatorIntegration.totalRankCount);
-        System.out.println("Total rating pair count : " + indicatorIntegration.totalRatingCount);
-        System.out.println("Total review volume pair count: " + indicatorIntegration.totalReviewVolumeCount);
+        System.out.println("Collusive pair count: " + framework.collusivePairCount);
+        System.out.println("Total rank pair count : " + framework.totalRankCount);
+        System.out.println("Total rating pair count : " + framework.totalRatingCount);
+        System.out.println("Total review volume pair count: " + framework.totalReviewVolumeCount);
 
         System.out.println("====================== CandidateClusterCapture 算法 =========================== ");
 
-        System.out.println("递归合并前candidate cluster数 : " + indicatorIntegration.candidateClusterMap.size());
-        indicatorIntegration.mapRecursiveCombine(jaccardValue);
+        System.out.println("递归合并前candidate cluster数 : " + framework.candidateClusterMap.size());
+        framework.mapRecursiveCombine(jaccardValue);
         System.out.println("Jaccard Similarity value : " + jaccardValue);
-        System.out.println("递归合并后candidate cluster数 : " + indicatorIntegration.candidateClusterMap.size());
+        System.out.println("递归合并后candidate cluster数 : " + framework.candidateClusterMap.size());
 
         System.out.println("========================= Candidate Cluster ================================ ");
 
 
-        System.out.println("candidate size 限制 : " + candidateSize);
+        System.out.println("candidate size 限制 : " + candidateLimitSize);
 
         DbController db = new DbController();
         FimController fimController = new FimController(db);
         fimController.loadCandidateCluster();
 
-        Set totalAppCount = Print.printEachGroupSize(indicatorIntegration.candidateClusterMap, candidateSize);
-        indicatorIntegration.duplicateCount(totalAppCount, fimController, candidateSize);
+        Set totalAppCount = Print.printEachGroupSize(framework.candidateClusterMap, candidateLimitSize);
+        framework.duplicateCount(totalAppCount, fimController, candidateLimitSize);
+
+        framework.makeCandidateClusterSet(candidateLimitSize);
 
         //导出数据到远程数据库
-        //integrationAnalyse.exportGroupData();
+        framework.exportToDatabase();
+        System.out.println("");
     }
 
     private void getRecordMaps() {
@@ -221,9 +225,7 @@ public class IndicatorIntegration {
             volumeFlag = true;
         }
 
-        //if ((rankFlag && ratingFlag) || (volumeFlag && rankFlag) || (volumeFlag && ratingFlag))
-
-        if (rankFlag && rankFlag && volumeFlag) {
+        if ((rankFlag && ratingFlag) || (volumeFlag && rankFlag) || (volumeFlag && ratingFlag)) {
             collusivePairCount++;
             if (candidateClusterMap.containsKey(outerId)) {
                 RankingGroup rankingGroup = candidateClusterMap.get(outerId);
@@ -278,12 +280,13 @@ public class IndicatorIntegration {
             mapRecursiveCombine(rate);
     }
 
-    public void makeGroupSet(int size) {
+    public void makeCandidateClusterSet(int size) {
         Object[] groupArray = candidateClusterMap.entrySet().toArray();
         for (int i = 0; i < groupArray.length; i++) {
             Map.Entry entry = (Map.Entry) groupArray[i];
             Set<String> idSet = ((RankingGroup) entry.getValue()).getAppIdSet();
-            groupSet.add(idSet);
+            if (idSet.size() >= size)
+                ccSet.add(idSet);
         }
     }
 
@@ -315,21 +318,19 @@ public class IndicatorIntegration {
         return count;
     }
 
-    public void exportGroupData() {
-        System.out.println("------------------------");
-        System.out.println("Start to export...");
-        Iterator groupIterator = groupSet.iterator();
+    public void exportToDatabase() {
+        System.out.println("============== Export To Remote DataBase ============");
+        Iterator groupIterator = ccSet.iterator();
         Iterator appIdIterator;
-        int groupNum = 0;
+        int clusterId = 1;
         while (groupIterator.hasNext()) {
             Set<String> idSet = (Set<String>) groupIterator.next();
             appIdIterator = idSet.iterator();
             while (appIdIterator.hasNext()) {
                 String appId = (String) appIdIterator.next();
-                System.out.println(groupNum + "  " + appId);
-                dataController.exportAppGroupToDb(groupNum, appId);
+                dataController.exportCCToDb(clusterId, appId);
             }
-            groupNum++;
+            clusterId++;
         }
     }
 }

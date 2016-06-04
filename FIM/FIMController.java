@@ -13,26 +13,45 @@ import java.util.*;
  * Created by chenhao on 5/20/16.
  */
 public class FimController {
+
+    //db:AppGroup
+    //key:cluster id
+    //value: app id set
     public Map<Integer, Set<String>> appGroupMap = new HashMap<>();
+
+    public Map<String, TreeSet<String>> appReviewerMap = new HashMap<>();
+
+    //key: cluster id
+    //value: 对应的TAC内所有刷榜用户评价的app ids
     public Map<Integer, Set<String>> testAppGroupMap = new HashMap<>();
-    public Map<String, Set<String>> userAppMap = new HashMap<>();
+
+    //key: reviewer id
+    //value: the set of apps that the user has reviewed
+    public Map<String, Set<String>> reviewerAppMap = new HashMap<>();
     public Set<String> userSet = new HashSet<>();
     public PreparedStatement selectRevewSqlStmt;
 
     public PreparedStatement selectRevewForAppStmt;
     DbController dbController;
+
+    //db: user_group
+    //key: cluster id
+    //value: user id set
     Map<Integer, Set<String>> userGroupMap = new TreeMap<>();
     String selectUserSql = "SELECT * FROM Data.user_group;";
+
     String selectClusterSql = "SELECT groupId,appId FROM Data.AppGroup;";
     String selectReviewSql = "SELECT * FROM Data.Review where userId=?; ";
 
     String selectReviewForApp = "SELECT count(*) FROM Data.Review where appId=?";
 
+    String testSql = "SELECT group_id, user_id,threshold FROM Data.user_group where cluster_id=2 and threshold=9;";
+    Set<String> testSet = new HashSet<>();
+
     public FimController(DbController dbController) {
         this.dbController = dbController;
         try {
             selectRevewSqlStmt = dbController.connection.prepareStatement(selectReviewSql);
-
             selectRevewForAppStmt = dbController.connection.prepareStatement(selectReviewForApp);
         } catch (Exception e) {
             e.printStackTrace();
@@ -44,12 +63,68 @@ public class FimController {
         DbController dbController = new DbController();
         FimController fimController = new FimController(dbController);
         fimController.loadUserGroup();
-        fimController.loadCluster();
+        fimController.loadCandidateCluster();
         fimController.countClusterReviewAmount();
         fimController.buildTestAppGroupMap();
+        //fimController.buildAppReviewerMap(2);
+        //fimController.groupCompareTest();
+
+        //fimController.executeFimTest();
+        fimController.printAppReviewMap();
 
 
-        //fimController.groupCompareTest(5);
+    }
+
+    public void printAppReviewMap() {
+        List<Integer> array = new ArrayList<>();
+        for (Map.Entry entry : appReviewerMap.entrySet()) {
+            String key = entry.getKey().toString();
+            int x = ((Set) entry.getValue()).size();
+            array.add(x);
+        }
+
+        Collections.sort(array);
+        for (int x : array) {
+            System.out.println(x);
+        }
+    }
+
+
+    public void executeFimTest() {
+        Statement statement;
+        ResultSet rs;
+
+        try {
+            statement = dbController.connection.createStatement();
+            rs = statement.executeQuery(testSql);
+
+            String userId;
+
+            while (rs.next()) {
+                userId = rs.getString("user_id");
+                testSet.add(userId);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        Set<String> appSet;
+        Set<String> tmpSet;
+
+
+        Object[] array = testSet.toArray();
+
+
+        for (int i = 0; i < array.length; i++) {
+            String userId = array[i].toString();
+            appSet = getReviewApps(userId);
+            for (String appId : appSet) {
+                insertToAppReviewerMap(appId, userId);
+            }
+        }
+
+
     }
 
 
@@ -100,7 +175,7 @@ public class FimController {
             while (rs.next()) {
                 userId = rs.getString("userId");
                 appId = rs.getString("appId");
-                insertToUserAppMap(userId, appId);
+                insertToReviewerAppMap(userId, appId);
             }
 
         } catch (SQLException e) {
@@ -108,15 +183,53 @@ public class FimController {
         }
     }
 
+    public void buildAppReviewerMap(int cluster) {
+
+        appReviewerMap.clear();
+        reviewerAppMap.clear();
+        Statement statement;
+        ResultSet rs;
+
+        Set<String> appSet = appGroupMap.get(cluster);
+
+        String sql = sqlGenerateForAppGroupReview(appSet);
+
+        try {
+            statement = dbController.connection.createStatement();
+            rs = statement.executeQuery(sql);
+
+            String userId;
+            String appId;
+            while (rs.next()) {
+                userId = rs.getString("userId");
+                appId = rs.getString("appId");
+                insertToAppReviewerMap(appId, userId);
+                insertToReviewerAppMap(userId, appId);
+
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public void insertToAppReviewerMap(String appId, String userId) {
+        if (appReviewerMap.containsKey(appId)) {
+            appReviewerMap.get(appId).add(userId);
+        } else {
+            TreeSet<String> newIdSet = new TreeSet<>();
+            newIdSet.add(userId);
+            appReviewerMap.put(appId, newIdSet);
+        }
+    }
+
     //构造app group map, key为对应的组, value为组内的app数
-    public void loadCluster() {
+    public void loadCandidateCluster() {
         Statement statement;
         ResultSet rs;
         try {
             statement = dbController.connection.createStatement();
-            System.out.println("start cluster data fetch...");
             rs = statement.executeQuery(selectClusterSql);
-            System.out.println("end cluster data fetch...");
             String appId;
             int groupId;
             while (rs.next()) {
@@ -134,19 +247,19 @@ public class FimController {
         if (appGroupMap.containsKey(groupId)) {
             appGroupMap.get(groupId).add(appId);
         } else {
-            Set<String> newIdSet = new HashSet<>();
+            TreeSet<String> newIdSet = new TreeSet<>();
             newIdSet.add(appId);
             appGroupMap.put(groupId, newIdSet);
         }
     }
 
-    private void insertToUserAppMap(String userId, String appId) {
-        if (userAppMap.containsKey(userId)) {
-            userAppMap.get(userId).add(appId);
+    private void insertToReviewerAppMap(String userId, String appId) {
+        if (reviewerAppMap.containsKey(userId)) {
+            reviewerAppMap.get(userId).add(appId);
         } else {
             Set<String> newIdSet = new HashSet<>();
             newIdSet.add(appId);
-            userAppMap.put(userId, newIdSet);
+            reviewerAppMap.put(userId, newIdSet);
         }
 
     }
@@ -169,7 +282,7 @@ public class FimController {
             int clusterId = (Integer) entry.getKey();
             Set<String> userGroup = (Set) entry.getValue();
             for (String userId : userGroup) {
-                Set<String> reviewApps = userAppMap.get(userId);
+                Set<String> reviewApps = reviewerAppMap.get(userId);
                 insertToTestAppMap(clusterId, reviewApps);
             }
         }
@@ -191,26 +304,21 @@ public class FimController {
         return appSet;
     }
 
+
     public void groupCompareTest() {
-        Set<String> appGroup = appGroupMap.get(1);
-        Set<String> revewAppGroup = testAppGroupMap.get(1);
-        Set<String> commonAppSet = Sets.intersection(appGroup, revewAppGroup);
-        double x = commonAppSet.size();
-        double y = appGroup.size();
-        double z = x / y;
-        System.out.println("result: " + z);
 
-    }
+        Set<Integer> clusterIdSet = testAppGroupMap.keySet();
+        for (int key : clusterIdSet) {
+            Set<String> appGroup = appGroupMap.get(key);
+            Set<String> reviewAppGroup = testAppGroupMap.get(key);
+            Set<String> commonAppSet = Sets.intersection(appGroup, reviewAppGroup);
+            Set<String> userGroup = userGroupMap.get(key);
 
-    public double groupCompareTest(int key) {
-        Set<String> appGroup = appGroupMap.get(key);
-        Set<String> revewAppGroup = testAppGroupMap.get(key);
-        Set<String> commonAppSet = Sets.intersection(appGroup, revewAppGroup);
-        double x = commonAppSet.size();
-        double y = appGroup.size();
-        double z = x / y;
-        System.out.println("result: " + z);
-        return z;
+            double x = commonAppSet.size();
+            double y = appGroup.size();
+            double z = x / y;
+            System.out.println("TAC id: " + key + " user size: " + userGroup.size() + " Cover Apps size: " + x + " Cover Apps Percentage: " + z);
+        }
     }
 
     public String sqlGenerateForReview() {
@@ -229,6 +337,24 @@ public class FimController {
         sql.append(range);
         return sql.toString();
     }
+
+    public String sqlGenerateForAppGroupReview(Set<String> set) {
+        StringBuffer sql = new StringBuffer("SELECT * FROM Data.Review where appId in ");
+        StringBuffer range = new StringBuffer("(");
+        Object[] array = set.toArray();
+        for (int i = 0; i < array.length; i++) {
+            if (i != (array.length - 1)) {
+                String id = array[i].toString();
+                range.append(id + ",");
+            } else {
+                String id = array[i].toString();
+                range.append(id + ")");
+            }
+        }
+        sql.append(range);
+        return sql.toString();
+    }
+
 
     public String sqlGenerateForApp(Set<String> cluster) {
         StringBuffer sql = new StringBuffer("SELECT count(*) as amount FROM Data.Review where appId in ");
@@ -255,13 +381,14 @@ public class FimController {
         ResultSet rs;
         for (Map.Entry entry : appGroupMap.entrySet()) {
             Set<String> cluster = (Set) entry.getValue();
+            int tacId = (Integer) entry.getKey();
             String sql = sqlGenerateForApp(cluster);
             try {
                 statement = dbController.connection.createStatement();
                 rs = statement.executeQuery(sql);
                 while (rs.next()) {
                     int amount = rs.getInt("amount");
-                    System.out.println(amount);
+                    System.out.println(tacId + ":  " + amount);
                 }
 
             } catch (SQLException e) {
@@ -269,5 +396,6 @@ public class FimController {
             }
         }
     }
+
 
 }

@@ -15,9 +15,9 @@ public class DataController {
 
     public int RANK_MIN_NUM = 5;
     public int RATE_NUM_MIN_NUM = 5;
-    public int RATING_MIN_NUM = 5;
+    public int RATING_MIN_NUM = 4;
 
-    public int FREQUENCY=8;
+    public int FREQUENCY = 8;
 
 
     private DbController dbController = new DbController();
@@ -41,6 +41,9 @@ public class DataController {
         dbController.setInsertRateNumTestStmt(DbController.insertTestSql);
         dbController.setInsertRateNumTestStmt(DbController.insertRankAppSql);
         remoteDbController.setInsertAppGroupStmt(remoteDbController.insertAppGroupSql);
+
+        remoteDbController.setInsertCCStmt(remoteDbController.insertCandidateClusterSql);
+
         dbController.setInsertAppGroupStmt(remoteDbController.insertAppGroupSql);
         dbController.setInsertRankAppStmt(DbController.insertRankAppSql);
         dbController.setInsertDistributionStmt(DbController.insertDistributionSql);
@@ -173,6 +176,16 @@ public class DataController {
             dbController.insertAppGroupStmt.setInt(1, groupId);
             dbController.insertAppGroupStmt.setString(2, appId);
             dbController.insertAppGroupStmt.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void exportCCToDb(int clusterId, String appId) {
+        try {
+            remoteDbController.insertCCStmt.setInt(1, clusterId);
+            remoteDbController.insertCCStmt.setString(2, appId);
+            remoteDbController.insertCCStmt.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
         }
