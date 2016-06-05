@@ -30,7 +30,6 @@ public class FimController {
     public Map<String, Set<String>> reviewerAppMap = new HashMap<>();
     public Set<String> userSet = new HashSet<>();
     public PreparedStatement selectRevewSqlStmt;
-
     public PreparedStatement selectRevewForAppStmt;
     DbController dbController;
 
@@ -40,7 +39,8 @@ public class FimController {
     Map<Integer, Set<String>> userGroupMap = new TreeMap<>();
     String selectUserSql = "SELECT * FROM Data.user_group;";
 
-    String selectClusterSql = "SELECT groupId,appId FROM Data.AppGroup;";
+    String selectClusterSql = "SELECT * FROM Data.CandidateCluster;";
+
     String selectReviewSql = "SELECT * FROM Data.Review where userId=?; ";
 
     String selectReviewForApp = "SELECT count(*) FROM Data.Review where appId=?";
@@ -97,7 +97,6 @@ public class FimController {
         try {
             statement = dbController.connection.createStatement();
             rs = statement.executeQuery(testSql);
-
             String userId;
 
             while (rs.next()) {
@@ -110,7 +109,6 @@ public class FimController {
         }
 
         Set<String> appSet;
-        Set<String> tmpSet;
 
 
         Object[] array = testSet.toArray();
@@ -233,7 +231,7 @@ public class FimController {
             String appId;
             int groupId;
             while (rs.next()) {
-                groupId = rs.getInt("groupId");
+                groupId = rs.getInt("clusterId");
                 appId = rs.getString("appId");
                 insertToAppMap(groupId, appId);
             }

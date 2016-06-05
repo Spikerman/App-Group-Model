@@ -55,7 +55,7 @@ public class Framework {
         Framework framework = new Framework();
         framework.getRecordMaps();
         framework.groupConstruction();
-        double jaccardValue = 0.5;
+        double jaccardValue = 0.6;
 
         int candidateLimitSize = 8;
 
@@ -87,8 +87,8 @@ public class Framework {
         framework.makeCandidateClusterSet(candidateLimitSize);
 
         //导出数据到远程数据库
-        framework.exportToDatabase();
-        System.out.println("");
+        //framework.exportToDatabase();
+        //System.out.println("");
     }
 
     private void getRecordMaps() {
@@ -203,7 +203,7 @@ public class Framework {
 
             double outer = (double) outerDiffRecord.amountDiff / (double) outerAppAvgDiffNum;
             double inner = (double) innerDiffRecord.amountDiff / (double) innerAppAvgDiffNum;
-            if (outer > 1.2 && inner > 1.2)
+            if (outer > 1.3 && inner > 1.3)
                 volumeCount++;
         }
 
@@ -225,8 +225,11 @@ public class Framework {
             volumeFlag = true;
         }
 
-        if ((rankFlag && ratingFlag) || (volumeFlag && rankFlag) || (volumeFlag && ratingFlag)) {
+        // if ((rankFlag && ratingFlag) || (volumeFlag && rankFlag) || (volumeFlag && ratingFlag)) {
+        if (rankFlag || ratingFlag || volumeFlag) {
+
             collusivePairCount++;
+
             if (candidateClusterMap.containsKey(outerId)) {
                 RankingGroup rankingGroup = candidateClusterMap.get(outerId);
                 rankingGroup.getAppIdSet().add(innerId);
@@ -238,6 +241,7 @@ public class Framework {
             }
 
         }
+
     }
 
     public void mapRecursiveCombine(double rate) {

@@ -18,7 +18,7 @@ public class OutPut {
         FimController fimController = new FimController(dbController);
         fimController.loadCandidateCluster();
 
-        for (int clusterId = 0; clusterId < 9; clusterId++) {
+        for (int clusterId = 1; clusterId <= 11; clusterId++) {
             fimController.buildAppReviewerMap(clusterId);
             Map appReviewerMap = fimController.appReviewerMap;
             Map reviewerAppMap = fimController.reviewerAppMap;
@@ -38,10 +38,8 @@ public class OutPut {
         for (Map.Entry entry : appReviewerMap.entrySet()) {
             TreeSet<String> reviewerSet = (TreeSet) entry.getValue();
             for (String reviewerId : reviewerSet) {
-                if (reviewerAppMap.get(reviewerId).size() >= 4) {
-                    bw.write(reviewerId);
-                    bw.write(" ");
-                }
+                bw.write(reviewerId);
+                bw.write(" ");
             }
             bw.newLine();
         }

@@ -13,12 +13,11 @@ import java.util.*;
  */
 public class DataController {
 
-    public int RANK_MIN_NUM = 5;
-    public int RATE_NUM_MIN_NUM = 5;
-    public int RATING_MIN_NUM = 4;
+    public int RANK_MIN_NUM = 16;
+    public int RATE_NUM_MIN_NUM = 4;
+    public int RATING_MIN_NUM = 3;
 
-    public int FREQUENCY = 8;
-
+    public int FREQUENCY = 18;
 
     private DbController dbController = new DbController();
     private RemoteDbController remoteDbController = new RemoteDbController();
@@ -108,13 +107,17 @@ public class DataController {
             rs = statement.executeQuery(selectSql);
 
             while (rs.next()) {
-                AppData appData = new AppData();
-                appData.appId = rs.getString("appId");
-                appData.rankType = rs.getString("rankType");
-                appData.ranking = rs.getInt("ranking");
-                appData.rankFloatNum = rs.getInt("rankFloatNum");
-                appData.date = DateFormat.timestampToMonthDayYear(rs.getTimestamp("date"));
-                appDataRecordListForRank.add((appData));
+
+                int floatNum = rs.getInt("rankFloatNum");
+                if (floatNum >= 150 || floatNum <= (-150)) {
+                    AppData appData = new AppData();
+                    appData.appId = rs.getString("appId");
+                    appData.rankType = rs.getString("rankType");
+                    appData.ranking = rs.getInt("ranking");
+                    appData.rankFloatNum = rs.getInt("rankFloatNum");
+                    appData.date = DateFormat.timestampToMonthDayYear(rs.getTimestamp("date"));
+                    appDataRecordListForRank.add((appData));
+                }
             }
 
         } catch (SQLException e) {
@@ -327,7 +330,6 @@ public class DataController {
         }
     }
 
-    //todo  将原有list该为Map
     //build app map according to the app data list that fetch from the database
     public DataController buildAppDataMapForRank() {
         for (AppData appData : appDataRecordListForRank) {
@@ -340,7 +342,7 @@ public class DataController {
             }
         }
 
-        System.out.println("数据库中App总数 : " + appMapForRank.size());
+        System.out.println("数据库App总数 : " + appMapForRank.size());
 
         Iterator iterator = appMapForRank.entrySet().iterator();
         while (iterator.hasNext()) {
@@ -359,11 +361,12 @@ public class DataController {
     }
 
     private int rankFrequencyCount(List<AppData> entry) {
-        Set<Date> dateSet = new HashSet<>();
+        int unusualCount = 0;
         for (AppData appData : entry) {
-            dateSet.add(appData.date);
+            if (appData.rankFloatNum >= 150 || appData.rankFloatNum <= (-150))
+                unusualCount++;
         }
-        return dateSet.size();
+        return unusualCount;
     }
 
 
