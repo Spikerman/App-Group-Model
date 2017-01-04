@@ -1,8 +1,8 @@
 package Ranking;
 
 import Controller.DataController;
+import DataModel.AppCluster;
 import DataModel.AppData;
-import DataModel.RankingGroup;
 import ToolKit.Print;
 import com.google.common.collect.Sets;
 
@@ -13,11 +13,11 @@ import java.util.*;
  */
 
 public class RankingAnalysis {
-    public TreeMap<String, RankingGroup> rankGroupMap = new TreeMap<>();
+    public TreeMap<String, AppCluster> rankGroupMap = new TreeMap<>();
     public DataController dataController;
-    private List<RankingGroup> groupList = new LinkedList<>();
-    private TreeMap<Date, Set<RankingGroup>> endDayMap = new TreeMap<>();
-    private TreeMap<Date, Set<RankingGroup>> beginDayMap = new TreeMap<>();
+    private List<AppCluster> groupList = new LinkedList<>();
+    private TreeMap<Date, Set<AppCluster>> endDayMap = new TreeMap<>();
+    private TreeMap<Date, Set<AppCluster>> beginDayMap = new TreeMap<>();
 
     public RankingAnalysis(DataController dataController) {
         this.dataController = dataController;
@@ -36,7 +36,7 @@ public class RankingAnalysis {
         Print.printEachGroupSize(rankingAnalysis.rankGroupMap);
     }
 
-    public TreeMap<String, RankingGroup> getRankGroupMap() {
+    public TreeMap<String, AppCluster> getRankGroupMap() {
         return rankGroupMap;
     }
 
@@ -82,7 +82,7 @@ public class RankingAnalysis {
         return day1 - day2;
     }
 
-    public List<RankingGroup> getGroupList() {
+    public List<AppCluster> getGroupList() {
         return groupList;
     }
 
@@ -107,7 +107,7 @@ public class RankingAnalysis {
                 if (!interSet.isEmpty()) {
                     int dayDiff = dayDiff(downDate, upDate);
                     String groupType = "FreeUpDown";
-                    RankingGroup group = new RankingGroup(groupType, dayDiff, interSet);
+                    AppCluster group = new AppCluster(groupType, dayDiff, interSet);
                     group.setDate(upDate, downDate);
                     groupList.add(group);
                 }
@@ -131,7 +131,7 @@ public class RankingAnalysis {
                 if (!interSet.isEmpty()) {
                     int dayDiff = dayDiff(downDate, upDate);
                     String groupType = "PaidUpDown";
-                    RankingGroup group = new RankingGroup(groupType, dayDiff, interSet);
+                    AppCluster group = new AppCluster(groupType, dayDiff, interSet);
                     group.setDate(upDate, downDate);
                     groupList.add(group);
                 }
@@ -157,7 +157,7 @@ public class RankingAnalysis {
                 if (!interSet.isEmpty()) {
                     int dayDiff = dayDiff(upDate, downDate);
                     String groupType = "FreeDownUp";
-                    RankingGroup group = new RankingGroup(groupType, dayDiff, interSet);
+                    AppCluster group = new AppCluster(groupType, dayDiff, interSet);
                     group.setDate(downDate, upDate);
                     groupList.add(group);
                 }
@@ -183,7 +183,7 @@ public class RankingAnalysis {
                 if (!interSet.isEmpty()) {
                     int dayDiff = dayDiff(upDate, downDate);
                     String groupType = "PaidDownUp";
-                    RankingGroup group = new RankingGroup(groupType, dayDiff, interSet);
+                    AppCluster group = new AppCluster(groupType, dayDiff, interSet);
                     group.setDate(downDate, upDate);
                     groupList.add(group);
                 }
@@ -211,7 +211,7 @@ public class RankingAnalysis {
                 if (!interSet.isEmpty()) {
                     int dayDiff = dayDiff(upDateNext, upDate);
                     String groupType = "FreeUpUp";
-                    RankingGroup group = new RankingGroup(groupType, dayDiff, interSet);
+                    AppCluster group = new AppCluster(groupType, dayDiff, interSet);
                     group.setDate(upDate, upDateNext);
                     groupList.add(group);
                 }
@@ -236,7 +236,7 @@ public class RankingAnalysis {
                 if (!interSet.isEmpty()) {
                     int dayDiff = dayDiff(upDateNext, upDate);
                     String groupType = "PaidUpUp";
-                    RankingGroup group = new RankingGroup(groupType, dayDiff, interSet);
+                    AppCluster group = new AppCluster(groupType, dayDiff, interSet);
                     group.setDate(upDate, upDateNext);
                     groupList.add(group);
                 }
@@ -264,7 +264,7 @@ public class RankingAnalysis {
                 if (!interSet.isEmpty()) {
                     int dayDiff = dayDiff(downDateNext, downDate);
                     String groupType = "FreeUpUp";
-                    RankingGroup group = new RankingGroup(groupType, dayDiff, interSet);
+                    AppCluster group = new AppCluster(groupType, dayDiff, interSet);
                     group.setDate(downDate, downDateNext);
                     groupList.add(group);
                 }
@@ -289,7 +289,7 @@ public class RankingAnalysis {
                 if (!interSet.isEmpty()) {
                     int dayDiff = dayDiff(downDateNext, downDate);
                     String groupType = "PaidDownDown";
-                    RankingGroup group = new RankingGroup(groupType, dayDiff, interSet);
+                    AppCluster group = new AppCluster(groupType, dayDiff, interSet);
                     group.setDate(downDate, downDateNext);
                     groupList.add(group);
                 }
@@ -298,12 +298,12 @@ public class RankingAnalysis {
     }
 
     //use group list to generate two map, the begin day map and the end day map.
-    public void beginEndMapBuilder(Map<Date, Set<RankingGroup>> beginDayMap, Map<Date, Set<RankingGroup>> endDayMap) {
+    public void beginEndMapBuilder(Map<Date, Set<AppCluster>> beginDayMap, Map<Date, Set<AppCluster>> endDayMap) {
 
         //remove duplicate data and build tree
         Iterator iterator = groupList.iterator();
         while (iterator.hasNext()) {
-            RankingGroup group = (RankingGroup) iterator.next();
+            AppCluster group = (AppCluster) iterator.next();
             if (group.dateDiffNum < 0 || ((group.groupType.equals("FreeDownUp") || group.groupType.equals("PaidDownUp")) && group.dateDiffNum == 0)) {
                 iterator.remove();
             } else {
@@ -311,7 +311,7 @@ public class RankingAnalysis {
                 if (beginDayMap.containsKey(group.getBeginDate())) {
                     beginDayMap.get(group.getBeginDate()).add(group);
                 } else {
-                    Set<RankingGroup> newSet = new HashSet<>();
+                    Set<AppCluster> newSet = new HashSet<>();
                     newSet.add(group);
                     beginDayMap.put(group.getBeginDate(), newSet);
                 }
@@ -319,7 +319,7 @@ public class RankingAnalysis {
                 if (endDayMap.containsKey(group.getEndDate())) {
                     endDayMap.get(group.getEndDate()).add(group);
                 } else {
-                    Set<RankingGroup> newSet = new HashSet<>();
+                    Set<AppCluster> newSet = new HashSet<>();
                     newSet.add(group);
                     endDayMap.put(group.getEndDate(), newSet);
                 }
@@ -327,7 +327,7 @@ public class RankingAnalysis {
         }
     }
 
-    public void beginEndMapBuilder(List<RankingGroup> list, Map<Date, Set<RankingGroup>> beginDayMap, Map<Date, Set<RankingGroup>> endDayMap) {
+    public void beginEndMapBuilder(List<AppCluster> list, Map<Date, Set<AppCluster>> beginDayMap, Map<Date, Set<AppCluster>> endDayMap) {
         //remove duplicate data and build tree
         if (list.isEmpty())
             return;
@@ -338,12 +338,12 @@ public class RankingAnalysis {
 
         Iterator iterator = list.iterator();
         while (iterator.hasNext()) {
-            RankingGroup group = (RankingGroup) iterator.next();
+            AppCluster group = (AppCluster) iterator.next();
 
             if (beginDayMap.containsKey(group.getBeginDate())) {
                 beginDayMap.get(group.getBeginDate()).add(group);
             } else {
-                Set<RankingGroup> newSet = new HashSet<>();
+                Set<AppCluster> newSet = new HashSet<>();
                 newSet.add(group);
                 beginDayMap.put(group.getBeginDate(), newSet);
             }
@@ -351,7 +351,7 @@ public class RankingAnalysis {
             if (endDayMap.containsKey(group.getEndDate())) {
                 endDayMap.get(group.getEndDate()).add(group);
             } else {
-                Set<RankingGroup> newSet = new HashSet<>();
+                Set<AppCluster> newSet = new HashSet<>();
                 newSet.add(group);
                 endDayMap.put(group.getEndDate(), newSet);
             }
@@ -360,8 +360,8 @@ public class RankingAnalysis {
 
 
     // return the intersection of endGroup and beginGroup, return null if intersect nothing
-    private RankingGroup getCombineGroup(RankingGroup endGroup, RankingGroup beginGroup) {
-        RankingGroup mixedGroup = new RankingGroup();
+    private AppCluster getCombineGroup(AppCluster endGroup, AppCluster beginGroup) {
+        AppCluster mixedGroup = new AppCluster();
         Set<String> intersectionSet = getIntersectionIdSet(endGroup.getAppIdSet(), beginGroup.getAppIdSet());
 
         if (intersectionSet.isEmpty())
@@ -374,10 +374,10 @@ public class RankingAnalysis {
     }
 
     //combine the group with same end day and begin day
-    private void expandGroup(Map<Date, Set<RankingGroup>> entryBeginDayMap, Map<Date, Set<RankingGroup>> entryEndDayMap) {
+    private void expandGroup(Map<Date, Set<AppCluster>> entryBeginDayMap, Map<Date, Set<AppCluster>> entryEndDayMap) {
         Iterator beginDatIter;
         Iterator endDatIter = entryEndDayMap.entrySet().iterator();
-        List<RankingGroup> tmpGroupList = new LinkedList<>();
+        List<AppCluster> tmpGroupList = new LinkedList<>();
         endDatePlusLoop:
         while (endDatIter.hasNext()) {
             beginDatIter = entryBeginDayMap.entrySet().iterator();
@@ -405,8 +405,8 @@ public class RankingAnalysis {
                 continue;
             }
 
-            Set<RankingGroup> beginGroupSet = (Set) beginEntry.getValue();
-            Set<RankingGroup> endGroupSet = (Set) endEntry.getValue();
+            Set<AppCluster> beginGroupSet = (Set) beginEntry.getValue();
+            Set<AppCluster> endGroupSet = (Set) endEntry.getValue();
 
             Object[] beginGroupArray = beginGroupSet.toArray();
             Object[] endGroupArray = endGroupSet.toArray();
@@ -414,9 +414,9 @@ public class RankingAnalysis {
             tmpGroupList = new LinkedList<>();
             for (int i = 0; i < beginGroupArray.length; i++) {
                 for (int j = i; j < endGroupArray.length; j++) {
-                    RankingGroup beginGroup = (RankingGroup) beginGroupArray[i];
-                    RankingGroup endGroup = (RankingGroup) endGroupArray[j];
-                    RankingGroup combinedGroup = getCombineGroup(endGroup, beginGroup);
+                    AppCluster beginGroup = (AppCluster) beginGroupArray[i];
+                    AppCluster endGroup = (AppCluster) endGroupArray[j];
+                    AppCluster combinedGroup = getCombineGroup(endGroup, beginGroup);
                     if (combinedGroup != null)
                         tmpGroupList.add(combinedGroup);
                 }
@@ -425,7 +425,7 @@ public class RankingAnalysis {
         beginEndMapBuilder(tmpGroupList, entryBeginDayMap, entryEndDayMap);
     }
 
-    public void expandToAll(Map<Date, Set<RankingGroup>> entryBeginDayMap, Map<Date, Set<RankingGroup>> entryEndDayMap) {
+    public void expandToAll(Map<Date, Set<AppCluster>> entryBeginDayMap, Map<Date, Set<AppCluster>> entryEndDayMap) {
 
         while (true) {
             Set<Date> endDateSet = entryEndDayMap.keySet();
@@ -454,11 +454,11 @@ public class RankingAnalysis {
 
         if (duplicateCount >= dataController.RANK_MIN_NUM) {
             if (rankGroupMap.containsKey(outerAppId)) {
-                RankingGroup rankingGroup = rankGroupMap.get(outerAppId);
-                rankingGroup.getAppIdSet().add(innerAppId);
-                rankingGroup.commonChangeDateSet.addAll(dateSet);
+                AppCluster appCluster = rankGroupMap.get(outerAppId);
+                appCluster.getAppIdSet().add(innerAppId);
+                appCluster.commonChangeDateSet.addAll(dateSet);
             } else {
-                RankingGroup newGroup = new RankingGroup();
+                AppCluster newGroup = new AppCluster();
                 newGroup.getAppIdSet().add(outerAppId);
                 newGroup.getAppIdSet().add(innerAppId);
                 newGroup.commonChangeDateSet.addAll(dateSet);
@@ -505,11 +505,11 @@ public class RankingAnalysis {
         }
         if (duplicateCount >= minimum) {
             if (rankGroupMap.containsKey(outerAppId)) {
-                RankingGroup rankingGroup = rankGroupMap.get(outerAppId);
-                rankingGroup.getAppIdSet().add(innerAppId);
-                rankingGroup.commonChangeDateSet.addAll(dateSet);
+                AppCluster appCluster = rankGroupMap.get(outerAppId);
+                appCluster.getAppIdSet().add(innerAppId);
+                appCluster.commonChangeDateSet.addAll(dateSet);
             } else {
-                RankingGroup newGroup = new RankingGroup();
+                AppCluster newGroup = new AppCluster();
                 newGroup.getAppIdSet().add(outerAppId);
                 newGroup.getAppIdSet().add(innerAppId);
                 newGroup.commonChangeDateSet.addAll(dateSet);
@@ -518,7 +518,7 @@ public class RankingAnalysis {
         }
     }
 
-    //generate the rankGroupMap that has appId as key, and RankingGroup as element
+    //generate the rankGroupMap that has appId as key, and AppCluster as element
     public void rankGroupMapGenerate() {
         Map appRankMap = dataController.getAppMapForRank();
         Object[] outerAppRankArray = appRankMap.entrySet().toArray();
@@ -561,8 +561,8 @@ public class RankingAnalysis {
                 String outerId = outerIdSet[i].toString();
                 String innerId = innerIdSet[j].toString();
 
-                //RankingGroup outerRankingGroup = (RankingGroup) outerEntry.getValue();
-                // RankingGroup innerRankingGroup = (RankingGroup) innerEntry.getValue();
+                //AppCluster outerRankingGroup = (AppCluster) outerEntry.getValue();
+                // AppCluster innerRankingGroup = (AppCluster) innerEntry.getValue();
 
                 Set<String> outerSet;
                 Set<String> innerSet;
@@ -607,7 +607,7 @@ public class RankingAnalysis {
             mapRecursiveCombine(rate);
     }
 
-    public void mapRecursiveCombine(double rate, Map<String, RankingGroup> groupMap) {
+    public void mapRecursiveCombine(double rate, Map<String, AppCluster> groupMap) {
         boolean hasDuplicateSet = false;
         Object[] outerIdSet = groupMap.keySet().toArray();
         Object[] innerIdSet = groupMap.keySet().toArray();
@@ -659,7 +659,7 @@ public class RankingAnalysis {
         Iterator iterator = rankGroupMap.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry entry = (Map.Entry) iterator.next();
-            RankingGroup group = (RankingGroup) entry.getValue();
+            AppCluster group = (AppCluster) entry.getValue();
             if (group.getAppSize() > 20) {
                 Set set = group.getAppIdSet();
                 Object[] array = set.toArray();

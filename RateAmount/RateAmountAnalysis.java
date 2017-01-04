@@ -1,8 +1,8 @@
 package RateAmount;
 
 import Controller.DataController;
+import DataModel.AppCluster;
 import DataModel.AppData;
-import DataModel.RankingGroup;
 import DataModel.RateAmountDiffRecord;
 import Ranking.RankingAnalysis;
 import ToolKit.Combination;
@@ -17,7 +17,7 @@ import java.util.*;
  */
 
 public class RateAmountAnalysis {
-    public Map<String, RankingGroup> rateNumGroupMap = new TreeMap<>();
+    public Map<String, AppCluster> rateNumGroupMap = new TreeMap<>();
     private DateComparator dateComparator = new DateComparator();
     private DataController dataController;
     //对diffRecordMap数据结构做出修改,改为
@@ -183,10 +183,10 @@ public class RateAmountAnalysis {
         if (duplicateCount >= 10) {
             //System.out.println(duplicateCount);
             if (rateNumGroupMap.containsKey(outerAppId)) {
-                RankingGroup rankingGroup = rateNumGroupMap.get(outerAppId);
-                rankingGroup.getAppIdSet().add(innerAppId);
+                AppCluster appCluster = rateNumGroupMap.get(outerAppId);
+                appCluster.getAppIdSet().add(innerAppId);
             } else {
-                RankingGroup newGroup = new RankingGroup();
+                AppCluster newGroup = new AppCluster();
                 newGroup.getAppIdSet().add(outerAppId);
                 newGroup.getAppIdSet().add(innerAppId);
                 rateNumGroupMap.put(outerAppId, newGroup);
@@ -215,10 +215,10 @@ public class RateAmountAnalysis {
 
         if (duplicateCount >=  dataController.RATE_NUM_MIN_NUM) {
             if (rateNumGroupMap.containsKey(outerAppId)) {
-                RankingGroup rankingGroup = rateNumGroupMap.get(outerAppId);
-                rankingGroup.getAppIdSet().add(innerAppId);
+                AppCluster appCluster = rateNumGroupMap.get(outerAppId);
+                appCluster.getAppIdSet().add(innerAppId);
             } else {
-                RankingGroup newGroup = new RankingGroup();
+                AppCluster newGroup = new AppCluster();
                 newGroup.getAppIdSet().add(outerAppId);
                 newGroup.getAppIdSet().add(innerAppId);
                 rateNumGroupMap.put(outerAppId, newGroup);
@@ -241,15 +241,15 @@ public class RateAmountAnalysis {
                 String outerId = outerEntry.getKey().toString();
                 String innerId = innerEntry.getKey().toString();
 
-                RankingGroup outerRankingGroup = (RankingGroup) outerEntry.getValue();
-                RankingGroup innerRankingGroup = (RankingGroup) innerEntry.getValue();
+                AppCluster outerAppCluster = (AppCluster) outerEntry.getValue();
+                AppCluster innerAppCluster = (AppCluster) innerEntry.getValue();
 
-                int outerGroupSize = outerRankingGroup.getAppSize();
-                int innerGroupSize = innerRankingGroup.getAppSize();
+                int outerGroupSize = outerAppCluster.getAppSize();
+                int innerGroupSize = innerAppCluster.getAppSize();
 
-                if (outerRankingGroup.getAppIdSet().containsAll(innerRankingGroup.getAppIdSet())
-                        || innerRankingGroup.getAppIdSet().containsAll(outerRankingGroup.getAppIdSet())
-                        || enableCombine(innerRankingGroup.getAppIdSet(), outerRankingGroup.getAppIdSet(), rate)) {
+                if (outerAppCluster.getAppIdSet().containsAll(innerAppCluster.getAppIdSet())
+                        || innerAppCluster.getAppIdSet().containsAll(outerAppCluster.getAppIdSet())
+                        || enableCombine(innerAppCluster.getAppIdSet(), outerAppCluster.getAppIdSet(), rate)) {
 
                     if (outerGroupSize > innerGroupSize)
                         rateNumGroupMap.remove(innerId);
@@ -263,7 +263,7 @@ public class RateAmountAnalysis {
             mapRecursiveCombine(rate);
     }
 
-    public void mapRecursiveCombine(double rate, Map<String, RankingGroup> groupMap) {
+    public void mapRecursiveCombine(double rate, Map<String, AppCluster> groupMap) {
         boolean hasDuplicateSet = false;
         Object[] outerIdSet = groupMap.keySet().toArray();
         Object[] innerIdSet = groupMap.keySet().toArray();
@@ -318,7 +318,7 @@ public class RateAmountAnalysis {
         Iterator iterator = rateNumGroupMap.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry entry = (Map.Entry) iterator.next();
-            RankingGroup group = (RankingGroup) entry.getValue();
+            AppCluster group = (AppCluster) entry.getValue();
             if (group.getAppSize() > 3) {
                 Set set = group.getAppIdSet();
                 Object[] array = set.toArray();

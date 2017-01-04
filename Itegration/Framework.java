@@ -2,8 +2,8 @@ package Itegration;
 
 import Controller.DataController;
 import Controller.DbController;
+import DataModel.AppCluster;
 import DataModel.AppData;
-import DataModel.RankingGroup;
 import DataModel.RateAmountDiffRecord;
 import FIM.FimController;
 import Ranking.RankingAnalysis;
@@ -21,20 +21,20 @@ import java.util.*;
 
 //启动函数
 public class Framework {
-    public Set<Set<String>> ccSet = new HashSet<>();
+    public Set<Set<String>> appClusterSet = new HashSet<>();// set of Targeted App Cluster
     public int collusivePairCount = 0;
     public DataController dataController;
     public int totalRankCount = 0;
     public int totalRatingCount = 0;
     public int totalReviewVolumeCount = 0;
-    Map<String, RankingGroup> candidateClusterMap = new HashMap<>();
+    Map<String, AppCluster> AppClusterMap = new HashMap<>();//包含各个 TAC 的 HashMap
+    private int adjustDayDiff = 3;
     private RankingAnalysis rankingAnalysis;
     private RateAmountAnalysis rateAmountAnalysis;
     private RatingAnalysis ratingAnalysis;
     private Map<String, List<AppData>> rankRecordMap;
     private Map<String, HashMap<Date, Double>> ratingRecordMap;
     private Map<String, HashMap<Date, RateAmountDiffRecord>> rateVolumeRecordMap;
-    private int adjustDayDiff = 3;
 
     public Framework() {
         dataController = new DataController();
@@ -48,7 +48,6 @@ public class Framework {
         rankingAnalysis = new RankingAnalysis(dataController);
         rateAmountAnalysis = new RateAmountAnalysis(dataController);
         ratingAnalysis = new RatingAnalysis(dataController);
-
         getRecordMaps();
         groupConstruction();
     }
@@ -57,26 +56,28 @@ public class Framework {
         Framework framework = new Framework();
         double jaccardValue = 0.5;
         int candidateLimitSize = 20;
-
         System.out.println("===================== App Pair ============================ ");
         System.out.println("Collusive pair count: " + framework.collusivePairCount);
         System.out.println("Total rank pair count : " + framework.totalRankCount);
         System.out.println("Total rating pair count : " + framework.totalRatingCount);
         System.out.println("Total review volume pair count: " + framework.totalReviewVolumeCount);
         System.out.println("====================== CandidateClusterCapture 算法 =========================== ");
-        System.out.println("递归合并前candidate cluster数 : " + framework.candidateClusterMap.size());
-        framework.mapRecursiveCombine(jaccardValue);
+        System.out.println("递归合并前candidate cluster数 : " + framework.AppClusterMap.size());
+        framework.clusterCombine(jaccardValue);
         System.out.println("Jaccard Similarity value : " + jaccardValue);
-        System.out.println("递归合并后candidate cluster数 : " + framework.candidateClusterMap.size());
+        System.out.println("递归合并后candidate cluster数 : " + framework.AppClusterMap.size());
         System.out.println("========================= Candidate Cluster ================================ ");
         System.out.println("candidate size 限制 : " + candidateLimitSize);
+        Set totalApps = Print.printEachGroupSize(framework.AppClusterMap, candidateLimitSize);
+
+
+        //以下为本地数据库与远程数据库中 app cluster 数据的数据比较部分
         DbController db = new DbController();
         FimController fimController = new FimController(db);
-        fimController.loadCCMapFromDb();
-        Set totalAppCount = Print.printEachGroupSize(framework.candidateClusterMap, candidateLimitSize);
-        framework.duplicateCount(totalAppCount, fimController, candidateLimitSize);
-        framework.makeCandidateClusterSet(candidateLimitSize);
-        framework.exportToDatabase();//导出数据到远程数据库
+        fimController.loadClusterMapFromLocalDb();
+        framework.duplicateCount(totalApps, fimController, candidateLimitSize);
+        framework.buildAppClusterSet(candidateLimitSize);
+        framework.exportToRemoteDb();//导出各个 app cluster 到远程数据库
     }
 
     private void getRecordMaps() {
@@ -86,37 +87,30 @@ public class Framework {
     }
 
     //计算原有APP与新试验结果的差值,以记录试验需要增量更新的APP记录
-    public void duplicateCount(Set totalAppCount, FimController fimController, int candidateSize) {
-
-        Set originalClusterAppCount = new HashSet<>();
-        for (Map.Entry entry : fimController.candidateClusterMap.entrySet()) {
+    public void duplicateCount(Set newTotalApps, FimController fimController, int candidateSize) {
+        Set oldTotalApps = new HashSet<>();
+        for (Map.Entry entry : fimController.candidateClusterMap.entrySet()) {//计算数据库中原有的APP总数
             Set set = (Set) entry.getValue();
-            originalClusterAppCount.addAll(set);
+            oldTotalApps.addAll(set);
         }
-
-        for (Map.Entry entry : candidateClusterMap.entrySet()) {
-            RankingGroup group = (RankingGroup) entry.getValue();
-            Set cc = group.getAppIdSet();
-
-            if (originalClusterAppCount.containsAll(cc) && (cc.size() >= candidateSize)) {
+        for (Map.Entry entry : AppClusterMap.entrySet()) {
+            AppCluster cluster = (AppCluster) entry.getValue();
+            Set clusterAppSet = cluster.getAppIdSet();
+            if (oldTotalApps.containsAll(clusterAppSet) && (clusterAppSet.size() >= candidateSize)) {
                 System.out.println("Yes!!!");
             }
         }
-
-
-        System.out.println("original app count : " + originalClusterAppCount.size());
-        System.out.println("new app count : " + totalAppCount.size());
-        Set newSet = Sets.intersection(originalClusterAppCount, totalAppCount);
+        System.out.println("old total app count : " + oldTotalApps.size());
+        System.out.println("new total app count : " + newTotalApps.size());
+        Set newSet = Sets.intersection(oldTotalApps, newTotalApps);
         System.out.println("common app count : " + newSet.size());
 
 
     }
 
-
     public void groupConstruction() {
         Object[] outerArray = rankRecordMap.entrySet().toArray();
         Object[] innerArray = rankRecordMap.entrySet().toArray();
-
         for (int i = 0; i < outerArray.length; i++) {
             for (int j = 0; j < innerArray.length; j++) {
                 Map.Entry outerEntry = (Map.Entry) outerArray[i];
@@ -138,16 +132,14 @@ public class Framework {
         //ranking
         List<AppData> outerList = (List) outerEntry.getValue();
         List<AppData> innerList = (List) innerEntry.getValue();
-
         //rating
         HashMap<Date, Double> outerRatingMap = (HashMap) ratingRecordMap.get(outerId);
         HashMap<Date, Double> innerRatingMap = (HashMap) ratingRecordMap.get(innerId);
-
         //review volume
         HashMap<Date, RateAmountDiffRecord> outerVolumeMap = (HashMap) rateVolumeRecordMap.get(outerId);
         HashMap<Date, RateAmountDiffRecord> innerVolumeMap = (HashMap) rateVolumeRecordMap.get(innerId);
-
         Set<Date> commonDate = new HashSet<>();
+
         //rank
         for (int i = 0; i < outerList.size(); i++) {
             for (int j = 0; j < innerList.size(); j++) {
@@ -213,27 +205,26 @@ public class Framework {
 
         // if ((rankFlag && ratingFlag) || (volumeFlag && rankFlag) || (volumeFlag && ratingFlag)) {
         if (rankFlag || ratingFlag || volumeFlag) {
-
             collusivePairCount++;
-
-            if (candidateClusterMap.containsKey(outerId)) {
-                RankingGroup rankingGroup = candidateClusterMap.get(outerId);
-                rankingGroup.getAppIdSet().add(innerId);
+            if (AppClusterMap.containsKey(outerId)) {
+                AppCluster appCluster = AppClusterMap.get(outerId);
+                appCluster.getAppIdSet().add(innerId);
             } else {
-                RankingGroup newGroup = new RankingGroup();
+                AppCluster newGroup = new AppCluster();
                 newGroup.getAppIdSet().add(outerId);
                 newGroup.getAppIdSet().add(innerId);
-                candidateClusterMap.put(outerId, newGroup);
+                AppClusterMap.put(outerId, newGroup);
             }
 
         }
 
     }
 
-    public void mapRecursiveCombine(double rate) {
+    //对初步计算出的 TAC 进行递归合并
+    public void clusterCombine(double rate) {
         boolean hasDuplicateSet = false;
-        Object[] outerIdSet = candidateClusterMap.keySet().toArray();
-        Object[] innerIdSet = candidateClusterMap.keySet().toArray();
+        Object[] outerIdSet = AppClusterMap.keySet().toArray();
+        Object[] innerIdSet = AppClusterMap.keySet().toArray();
 
         for (int i = 0; i < outerIdSet.length; i++) {
             for (int j = i + 1; j < innerIdSet.length; j++) {
@@ -242,9 +233,9 @@ public class Framework {
 
                 Set<String> outerSet;
                 Set<String> innerSet;
-                if (candidateClusterMap.containsKey(outerId) && candidateClusterMap.containsKey(innerId)) {
-                    outerSet = candidateClusterMap.get(outerId).getAppIdSet();
-                    innerSet = candidateClusterMap.get(innerId).getAppIdSet();
+                if (AppClusterMap.containsKey(outerId) && AppClusterMap.containsKey(innerId)) {
+                    outerSet = AppClusterMap.get(outerId).getAppIdSet();
+                    innerSet = AppClusterMap.get(innerId).getAppIdSet();
 
                     int outerGroupSize = outerSet.size();
                     int innerGroupSize = innerSet.size();
@@ -254,34 +245,31 @@ public class Framework {
                             || enableCombine(innerSet, outerSet, rate)) {
                         if (outerGroupSize > innerGroupSize) {
                             outerSet.addAll(innerSet);
-                            candidateClusterMap.remove(innerId);
+                            AppClusterMap.remove(innerId);
 
                         } else {
                             innerSet.addAll(outerSet);
-                            candidateClusterMap.remove(outerId);
+                            AppClusterMap.remove(outerId);
                         }
                         hasDuplicateSet = true;
                     }
                 }
             }
         }
-
         if (hasDuplicateSet)
-            mapRecursiveCombine(rate);
+            clusterCombine(rate);
     }
 
-    public void makeCandidateClusterSet(int size) {
-        Object[] groupArray = candidateClusterMap.entrySet().toArray();
-
+    public void buildAppClusterSet(int size) {
+        Object[] groupArray = AppClusterMap.entrySet().toArray();
         int totalCount = 0;
         for (int i = 0; i < groupArray.length; i++) {
             Map.Entry entry = (Map.Entry) groupArray[i];
-            Set<String> idSet = ((RankingGroup) entry.getValue()).getAppIdSet();
+            Set<String> idSet = ((AppCluster) entry.getValue()).getAppIdSet();
             totalCount += idSet.size();
             if (idSet.size() >= size)
-                ccSet.add(idSet);
+                appClusterSet.add(idSet);
         }
-
         System.out.println("avg cluster size : " + (float) totalCount / (float) groupArray.length);
     }
 
@@ -312,17 +300,18 @@ public class Framework {
         return count;
     }
 
-    public void exportToDatabase() {
+    //将各组 cluster 的数据输出到远程服务器中
+    public void exportToRemoteDb() {
         System.out.println("============== Export To Remote DataBase ============");
-        Iterator groupIterator = ccSet.iterator();
+        Iterator clusterIterator = appClusterSet.iterator();
         Iterator appIdIterator;
         int clusterId = 1;
-        while (groupIterator.hasNext()) {
-            Set<String> idSet = (Set<String>) groupIterator.next();
+        while (clusterIterator.hasNext()) {
+            Set<String> idSet = (Set<String>) clusterIterator.next();
             appIdIterator = idSet.iterator();
             while (appIdIterator.hasNext()) {
                 String appId = (String) appIdIterator.next();
-                dataController.exportCCToDb(clusterId, appId);
+                dataController.exportClusterToRemoteDb(clusterId, appId);
             }
             clusterId++;
         }

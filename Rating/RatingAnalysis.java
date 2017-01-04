@@ -1,8 +1,8 @@
 package Rating;
 
 import Controller.DataController;
+import DataModel.AppCluster;
 import DataModel.AppData;
-import DataModel.RankingGroup;
 import Ranking.RankingAnalysis;
 import ToolKit.DateComparator;
 import ToolKit.DateFormat;
@@ -15,7 +15,7 @@ import java.util.*;
  * Created by 景舜 on 2016/3/30.
  */
 public class RatingAnalysis {
-    public Map<String, RankingGroup> ratingGroupMap = new HashMap<>();
+    public Map<String, AppCluster> ratingGroupMap = new HashMap<>();
     public int adjustDayDiff = 3;
     private DataController dataController;
     private Map<String, List<AppData>> appDataMap;
@@ -90,11 +90,11 @@ public class RatingAnalysis {
 
         if (duplicateCount >= dataController.RATING_MIN_NUM) {
             if (ratingGroupMap.containsKey(outerAppId)) {
-                RankingGroup ratingGroup = ratingGroupMap.get(outerAppId);
+                AppCluster ratingGroup = ratingGroupMap.get(outerAppId);
                 ratingGroup.getAppIdSet().add(innerAppId);
                 ratingGroup.commonChangeDateSet.addAll(commonDateSet);
             } else {
-                RankingGroup newGroup = new RankingGroup();
+                AppCluster newGroup = new AppCluster();
                 newGroup.getAppIdSet().add(outerAppId);
                 newGroup.getAppIdSet().add(innerAppId);
                 newGroup.commonChangeDateSet.addAll(commonDateSet);
@@ -144,11 +144,11 @@ public class RatingAnalysis {
         ratingGroupMapGenerate();
     }
 
-    public void print(Map<String, RankingGroup> ratingGroupMap) {
+    public void print(Map<String, AppCluster> ratingGroupMap) {
         Iterator iter = ratingGroupMap.entrySet().iterator();
         while (iter.hasNext()) {
             Map.Entry item = (Map.Entry) iter.next();
-            RankingGroup group = (RankingGroup) item.getValue();
+            AppCluster group = (AppCluster) item.getValue();
             group.print();
         }
     }
@@ -178,8 +178,8 @@ public class RatingAnalysis {
                 String outerId = outerEntry.getKey().toString();
                 String innerId = innerEntry.getKey().toString();
 
-                RankingGroup outerRatingGroup = (RankingGroup) outerEntry.getValue();
-                RankingGroup innerRatingGroup = (RankingGroup) innerEntry.getValue();
+                AppCluster outerRatingGroup = (AppCluster) outerEntry.getValue();
+                AppCluster innerRatingGroup = (AppCluster) innerEntry.getValue();
 
                 int outerGroupSize = outerRatingGroup.getAppSize();
                 int innerGroupSize = innerRatingGroup.getAppSize();
@@ -203,7 +203,7 @@ public class RatingAnalysis {
             mapRecursiveCombine(rate);
     }
 
-    public void mapRecursiveCombine(double rate, Map<String, RankingGroup> groupMap) {
+    public void mapRecursiveCombine(double rate, Map<String, AppCluster> groupMap) {
         boolean hasDuplicateSet = false;
         Object[] outerIdSet = groupMap.keySet().toArray();
         Object[] innerIdSet = groupMap.keySet().toArray();

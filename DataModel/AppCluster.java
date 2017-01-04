@@ -8,7 +8,9 @@ import java.util.TreeSet;
 /**
  * Created by chenhao on 3/27/16.
  */
-public class RankingGroup {
+
+//原来的 ranking group, 封装了 appIdSet 数据
+public class AppCluster {
     public int dateDiffNum = 0;
     public String groupType = "";
     public Set<Date> commonChangeDateSet = new TreeSet<>();
@@ -16,13 +18,13 @@ public class RankingGroup {
     private Date beginDate;
     private Date endDate;
 
-    public RankingGroup(String groupType, int dateDiffNum, Set<String> appIdSet) {
+    public AppCluster(String groupType, int dateDiffNum, Set<String> appIdSet) {
         this.groupType = groupType;
         this.dateDiffNum = dateDiffNum;
         this.appIdSet = appIdSet;
     }
 
-    public RankingGroup() {
+    public AppCluster() {
     }
 
     public Date getBeginDate() {

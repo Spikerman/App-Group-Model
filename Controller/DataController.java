@@ -180,7 +180,7 @@ public class DataController {
         }
     }
 
-    public void exportCCToDb(int clusterId, String appId) {
+    public void exportClusterToRemoteDb(int clusterId, String appId) {
         try {
             remoteDbController.insertCCStmt.setInt(1, clusterId);
             remoteDbController.insertCCStmt.setString(2, appId);

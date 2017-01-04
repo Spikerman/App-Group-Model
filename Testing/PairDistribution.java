@@ -2,7 +2,7 @@ package Testing;
 
 import Controller.DataController;
 import DataModel.AppData;
-import DataModel.RankingGroup;
+import DataModel.AppCluster;
 import DataModel.RateAmountDiffRecord;
 import Ranking.RankingAnalysis;
 import RateAmount.RateAmountAnalysis;
@@ -21,7 +21,7 @@ public class PairDistribution {
     public Map<Integer, Integer> rankDt = new TreeMap<>();
     public Map<Integer, Integer> ratingDt = new TreeMap<>();
     public Map<Integer, Integer> volumeDt = new TreeMap<>();
-    Map<String, RankingGroup> candidateGroupMap = new HashMap<>();
+    Map<String, AppCluster> candidateGroupMap = new HashMap<>();
     private RankingAnalysis rankingAnalysis;
     private RateAmountAnalysis rateAmountAnalysis;
     private RatingAnalysis ratingAnalysis;

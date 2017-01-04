@@ -16,7 +16,7 @@ public class OutPut {
     public static void main(String args[]) {
         DbController dbController = new DbController();
         FimController fimController = new FimController(dbController);
-        fimController.loadCCMapFromDb();
+        fimController.loadClusterMapFromLocalDb();
         int mapSize = fimController.candidateClusterMap.size();
         for (int clusterId = 1; clusterId <= mapSize; clusterId++) {
             fimController.buildAppReviewerMap(clusterId);

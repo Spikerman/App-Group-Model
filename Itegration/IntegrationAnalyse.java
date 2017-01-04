@@ -1,7 +1,7 @@
 package Itegration;
 
 import Controller.DataController;
-import DataModel.RankingGroup;
+import DataModel.AppCluster;
 import Ranking.RankingAnalysis;
 import RateAmount.RateAmountAnalysis;
 import Rating.RatingAnalysis;
@@ -55,7 +55,7 @@ public class IntegrationAnalyse {
 
 
         //导出数据到远程数据库
-        //integrationAnalyse.exportToDatabase();
+        //integrationAnalyse.exportToRemoteDb();
     }
 
     public int getGroupSetSize() {
@@ -108,8 +108,8 @@ public class IntegrationAnalyse {
             for (int j = 0; j < rateNumArray.length; j++) {
                 Map.Entry rankEntry = (Map.Entry) rankArray[i];
                 Map.Entry rateNumEntry = (Map.Entry) rateNumArray[j];
-                RankingGroup rankGroup = (RankingGroup) rankEntry.getValue();
-                RankingGroup rateNumGroup = (RankingGroup) rateNumEntry.getValue();
+                AppCluster rankGroup = (AppCluster) rankEntry.getValue();
+                AppCluster rateNumGroup = (AppCluster) rateNumEntry.getValue();
                 if (enableCombine(rankGroup.getAppIdSet(), rateNumGroup.getAppIdSet(), rate)) {
                     groupSet.add(rankGroup.getAppIdSet());
                     groupSet.add(rateNumGroup.getAppIdSet());
@@ -128,8 +128,8 @@ public class IntegrationAnalyse {
             for (int j = 0; j < rateNumArray.length; j++) {
                 Map.Entry rankEntry = (Map.Entry) rankArray[i];
                 Map.Entry rateNumEntry = (Map.Entry) rateNumArray[j];
-                RankingGroup rankGroup = (RankingGroup) rankEntry.getValue();
-                RankingGroup rateNumGroup = (RankingGroup) rateNumEntry.getValue();
+                AppCluster rankGroup = (AppCluster) rankEntry.getValue();
+                AppCluster rateNumGroup = (AppCluster) rateNumEntry.getValue();
                 groupSet.add(rankGroup.getAppIdSet());
                 groupSet.add(rateNumGroup.getAppIdSet());
             }
@@ -143,19 +143,19 @@ public class IntegrationAnalyse {
         Iterator ratingIterator = ratingGroupMap.entrySet().iterator();
         while (rankIterator.hasNext()) {
             Map.Entry entry = (Map.Entry) rankIterator.next();
-            RankingGroup group = (RankingGroup) entry.getValue();
+            AppCluster group = (AppCluster) entry.getValue();
             groupSet.add(group.getAppIdSet());
         }
 
         while (rateNumIterator.hasNext()) {
             Map.Entry entry = (Map.Entry) rateNumIterator.next();
-            RankingGroup group = (RankingGroup) entry.getValue();
+            AppCluster group = (AppCluster) entry.getValue();
             groupSet.add(group.getAppIdSet());
         }
 
         while (ratingIterator.hasNext()) {
             Map.Entry entry = (Map.Entry) ratingIterator.next();
-            RankingGroup group = (RankingGroup) entry.getValue();
+            AppCluster group = (AppCluster) entry.getValue();
             groupSet.add(group.getAppIdSet());
         }
 
@@ -172,12 +172,12 @@ public class IntegrationAnalyse {
                     Map.Entry rankEntry = (Map.Entry) rankArray[i];
                     Map.Entry rateNumEntry = (Map.Entry) rateNumArray[j];
                     Map.Entry ratingEntry = (Map.Entry) ratingArray[k];
-//                    RankingGroup rankGroup = (RankingGroup) rankEntry.getValue();
-//                    RankingGroup rateNumGroup = (RankingGroup) rateNumEntry.getValue();
-//                    RankingGroup ratingGroup = (RankingGroup) ratingEntry.getValue()
-                    Set<String> rankSet = ((RankingGroup) rankEntry.getValue()).getAppIdSet();
-                    Set<String> rateNumSet = ((RankingGroup) rateNumEntry.getValue()).getAppIdSet();
-                    Set<String> ratingSet = ((RankingGroup) ratingEntry.getValue()).getAppIdSet();
+//                    AppCluster rankGroup = (AppCluster) rankEntry.getValue();
+//                    AppCluster rateNumGroup = (AppCluster) rateNumEntry.getValue();
+//                    AppCluster ratingGroup = (AppCluster) ratingEntry.getValue()
+                    Set<String> rankSet = ((AppCluster) rankEntry.getValue()).getAppIdSet();
+                    Set<String> rateNumSet = ((AppCluster) rateNumEntry.getValue()).getAppIdSet();
+                    Set<String> ratingSet = ((AppCluster) ratingEntry.getValue()).getAppIdSet();
                     combineGroup(rankSet, rateNumSet, ratingSet, rate);
                 }
             }
@@ -314,31 +314,31 @@ public class IntegrationAnalyse {
     private void combineGroup(Set<String> rankSet, Set<String> rateNumSet, Set<String> ratingSet, double rate) {
 //        if (rankSet.containsAll(rateNumSet)) {
 //            if (rankSet.containsAll(ratingSet)) {
-//                ccSet.add(rankSet);
+//                appClusterSet.add(rankSet);
 //                return true;
 //            } else {
 //                if (enableCombine(rankSet, ratingSet, rate)) {
-//                    ccSet.add(Sets.union(rankSet, ratingSet));
+//                    appClusterSet.add(Sets.union(rankSet, ratingSet));
 //                    return true;
 //                }
 //            }
 //        } else if (rateNumSet.containsAll(rankSet)) {
 //            if (rateNumSet.containsAll(ratingSet)) {
-//                ccSet.add(rateNumSet);
+//                appClusterSet.add(rateNumSet);
 //                return true;
 //            } else {
 //                if (enableCombine(rateNumSet, ratingSet, rate)) {
-//                    ccSet.add(Sets.union(rateNumSet, ratingSet));
+//                    appClusterSet.add(Sets.union(rateNumSet, ratingSet));
 //                    return true;
 //                }
 //            }
 //        } else if (ratingSet.containsAll(rankSet)) {
 //            if (ratingSet.containsAll(rateNumSet)) {
-//                ccSet.add(ratingSet);
+//                appClusterSet.add(ratingSet);
 //                return true;
 //            } else {
 //                if (enableCombine(rankSet, ratingSet, rate)) {
-//                    ccSet.add(Sets.union(rankSet, ratingSet));
+//                    appClusterSet.add(Sets.union(rankSet, ratingSet));
 //                    return true;
 //                }
 //            }
@@ -358,8 +358,8 @@ public class IntegrationAnalyse {
                 groupSet.add(unionSet);
             } else {
                 groupSet.add(rankSet);
-                // ccSet.add(rateNumSet);
-                // ccSet.add(ratingSet);
+                // appClusterSet.add(rateNumSet);
+                // appClusterSet.add(ratingSet);
             }
         } else if (rateNumSet.size() >= rankSet.size() && rateNumSet.size() >= ratingSet.size()) {
             if (!rateNumSet.containsAll(rankSet) && !rateNumSet.containsAll(ratingSet)) {
@@ -375,8 +375,8 @@ public class IntegrationAnalyse {
                 groupSet.add(unionSet);
             } else {
                 groupSet.add(rankSet);
-                //ccSet.add(rateNumSet);
-                //ccSet.add(ratingSet);
+                //appClusterSet.add(rateNumSet);
+                //appClusterSet.add(ratingSet);
             }
         } else {
             if (!ratingSet.containsAll(rankSet) && !ratingSet.containsAll(rateNumSet)) {
@@ -392,8 +392,8 @@ public class IntegrationAnalyse {
                 groupSet.add(unionSet);
             } else {
                 groupSet.add(rankSet);
-                // ccSet.add(rateNumSet);
-                // ccSet.add(ratingSet);
+                // appClusterSet.add(rateNumSet);
+                // appClusterSet.add(ratingSet);
             }
         }
     }
