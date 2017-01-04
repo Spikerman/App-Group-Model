@@ -19,7 +19,7 @@ import java.util.*;
  * Created by chenhao on 5/10/16.
  */
 
-
+//启动函数
 public class Framework {
     public Set<Set<String>> ccSet = new HashSet<>();
     public int collusivePairCount = 0;
@@ -39,7 +39,6 @@ public class Framework {
     public Framework() {
         dataController = new DataController();
         System.out.println("======================= 前置条件 ======================= ");
-
         System.out.println("Unusual Ranking Float Frequency " + dataController.FREQUENCY);
         System.out.println("Rank Threshold : " + dataController.RANK_MIN_NUM);
         System.out.println("Rating Threshold : " + dataController.RATING_MIN_NUM);
@@ -49,46 +48,35 @@ public class Framework {
         rankingAnalysis = new RankingAnalysis(dataController);
         rateAmountAnalysis = new RateAmountAnalysis(dataController);
         ratingAnalysis = new RatingAnalysis(dataController);
+
+        getRecordMaps();
+        groupConstruction();
     }
 
     public static void main(String args[]) {
         Framework framework = new Framework();
-        framework.getRecordMaps();
-        framework.groupConstruction();
-        double jaccardValue = 0.6;
-
-        int candidateLimitSize = 8;
+        double jaccardValue = 0.5;
+        int candidateLimitSize = 20;
 
         System.out.println("===================== App Pair ============================ ");
         System.out.println("Collusive pair count: " + framework.collusivePairCount);
         System.out.println("Total rank pair count : " + framework.totalRankCount);
         System.out.println("Total rating pair count : " + framework.totalRatingCount);
         System.out.println("Total review volume pair count: " + framework.totalReviewVolumeCount);
-
         System.out.println("====================== CandidateClusterCapture 算法 =========================== ");
-
         System.out.println("递归合并前candidate cluster数 : " + framework.candidateClusterMap.size());
         framework.mapRecursiveCombine(jaccardValue);
         System.out.println("Jaccard Similarity value : " + jaccardValue);
         System.out.println("递归合并后candidate cluster数 : " + framework.candidateClusterMap.size());
-
         System.out.println("========================= Candidate Cluster ================================ ");
-
-
         System.out.println("candidate size 限制 : " + candidateLimitSize);
-
         DbController db = new DbController();
         FimController fimController = new FimController(db);
-        fimController.loadCandidateCluster();
-
+        fimController.loadCCMapFromDb();
         Set totalAppCount = Print.printEachGroupSize(framework.candidateClusterMap, candidateLimitSize);
         framework.duplicateCount(totalAppCount, fimController, candidateLimitSize);
-
         framework.makeCandidateClusterSet(candidateLimitSize);
-
-        //导出数据到远程数据库
-        //framework.exportToDatabase();
-        //System.out.println("");
+        framework.exportToDatabase();//导出数据到远程数据库
     }
 
     private void getRecordMaps() {
@@ -101,7 +89,7 @@ public class Framework {
     public void duplicateCount(Set totalAppCount, FimController fimController, int candidateSize) {
 
         Set originalClusterAppCount = new HashSet<>();
-        for (Map.Entry entry : fimController.appGroupMap.entrySet()) {
+        for (Map.Entry entry : fimController.candidateClusterMap.entrySet()) {
             Set set = (Set) entry.getValue();
             originalClusterAppCount.addAll(set);
         }
@@ -198,8 +186,6 @@ public class Framework {
         for (Date date : shareDateSetV) {
             RateAmountDiffRecord outerDiffRecord = outerVolumeMap.get(date);
             RateAmountDiffRecord innerDiffRecord = innerVolumeMap.get(date);
-            boolean outerSurgeFlag = false;
-            boolean innerSurgeFlag = false;
 
             double outer = (double) outerDiffRecord.amountDiff / (double) outerAppAvgDiffNum;
             double inner = (double) innerDiffRecord.amountDiff / (double) innerAppAvgDiffNum;
@@ -286,12 +272,17 @@ public class Framework {
 
     public void makeCandidateClusterSet(int size) {
         Object[] groupArray = candidateClusterMap.entrySet().toArray();
+
+        int totalCount = 0;
         for (int i = 0; i < groupArray.length; i++) {
             Map.Entry entry = (Map.Entry) groupArray[i];
             Set<String> idSet = ((RankingGroup) entry.getValue()).getAppIdSet();
+            totalCount += idSet.size();
             if (idSet.size() >= size)
                 ccSet.add(idSet);
         }
+
+        System.out.println("avg cluster size : " + (float) totalCount / (float) groupArray.length);
     }
 
     private boolean enableCombine(Set<String> setA, Set<String> setB, double rate) {
@@ -303,7 +294,6 @@ public class Framework {
 
         return (intersectionSize / unionSize) >= rate;
     }
-
 
     private int approxEquals(HashMap<Date, Double> outerMap, HashMap<Date, Double> innerMap, Date date) {
         Double outerRateDiff;

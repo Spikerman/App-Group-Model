@@ -16,9 +16,9 @@ public class OutPut {
     public static void main(String args[]) {
         DbController dbController = new DbController();
         FimController fimController = new FimController(dbController);
-        fimController.loadCandidateCluster();
-
-        for (int clusterId = 1; clusterId <= 11; clusterId++) {
+        fimController.loadCCMapFromDb();
+        int mapSize = fimController.candidateClusterMap.size();
+        for (int clusterId = 1; clusterId <= mapSize; clusterId++) {
             fimController.buildAppReviewerMap(clusterId);
             Map appReviewerMap = fimController.appReviewerMap;
             Map reviewerAppMap = fimController.reviewerAppMap;
@@ -31,6 +31,7 @@ public class OutPut {
         }
     }
 
+
     public void BufferedWriterTest(Map<String, TreeSet<String>> appReviewerMap, Map<String, Set<String>> reviewerAppMap, int clusterId) throws IOException {
         String x = "result%d.txt";
         String filename = String.format(x, clusterId);
@@ -38,8 +39,10 @@ public class OutPut {
         for (Map.Entry entry : appReviewerMap.entrySet()) {
             TreeSet<String> reviewerSet = (TreeSet) entry.getValue();
             for (String reviewerId : reviewerSet) {
-                bw.write(reviewerId);
-                bw.write(" ");
+                if (reviewerAppMap.get(reviewerId).size() >= 3) {
+                    bw.write(reviewerId);
+                    bw.write(" ");
+                }
             }
             bw.newLine();
         }

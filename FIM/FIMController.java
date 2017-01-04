@@ -17,7 +17,7 @@ public class FimController {
     //db:AppGroup
     //key:cluster id
     //value: app id set
-    public Map<Integer, Set<String>> appGroupMap = new HashMap<>();
+    public Map<Integer, Set<String>> candidateClusterMap = new HashMap<>();
 
     public Map<String, TreeSet<String>> appReviewerMap = new HashMap<>();
 
@@ -63,7 +63,7 @@ public class FimController {
         DbController dbController = new DbController();
         FimController fimController = new FimController(dbController);
         fimController.loadUserGroup();
-        fimController.loadCandidateCluster();
+        fimController.loadCCMapFromDb();
         fimController.countClusterReviewAmount();
         fimController.buildTestAppGroupMap();
         //fimController.buildAppReviewerMap(2);
@@ -188,7 +188,7 @@ public class FimController {
         Statement statement;
         ResultSet rs;
 
-        Set<String> appSet = appGroupMap.get(cluster);
+        Set<String> appSet = candidateClusterMap.get(cluster);
 
         String sql = sqlGenerateForAppGroupReview(appSet);
 
@@ -222,18 +222,18 @@ public class FimController {
     }
 
     //构造app group map, key为对应的组, value为组内的app数
-    public void loadCandidateCluster() {
+    public void loadCCMapFromDb() {
         Statement statement;
         ResultSet rs;
         try {
             statement = dbController.connection.createStatement();
             rs = statement.executeQuery(selectClusterSql);
             String appId;
-            int groupId;
+            int clusterId;
             while (rs.next()) {
-                groupId = rs.getInt("clusterId");
+                clusterId = rs.getInt("clusterId");
                 appId = rs.getString("appId");
-                insertToAppMap(groupId, appId);
+                insertToCCMap(clusterId, appId);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -241,13 +241,13 @@ public class FimController {
     }
 
 
-    private void insertToAppMap(Integer groupId, String appId) {
-        if (appGroupMap.containsKey(groupId)) {
-            appGroupMap.get(groupId).add(appId);
+    private void insertToCCMap(Integer groupId, String appId) {
+        if (candidateClusterMap.containsKey(groupId)) {
+            candidateClusterMap.get(groupId).add(appId);
         } else {
             TreeSet<String> newIdSet = new TreeSet<>();
             newIdSet.add(appId);
-            appGroupMap.put(groupId, newIdSet);
+            candidateClusterMap.put(groupId, newIdSet);
         }
     }
 
@@ -307,7 +307,7 @@ public class FimController {
 
         Set<Integer> clusterIdSet = testAppGroupMap.keySet();
         for (int key : clusterIdSet) {
-            Set<String> appGroup = appGroupMap.get(key);
+            Set<String> appGroup = candidateClusterMap.get(key);
             Set<String> reviewAppGroup = testAppGroupMap.get(key);
             Set<String> commonAppSet = Sets.intersection(appGroup, reviewAppGroup);
             Set<String> userGroup = userGroupMap.get(key);
@@ -377,7 +377,7 @@ public class FimController {
     public void countClusterReviewAmount() {
         Statement statement;
         ResultSet rs;
-        for (Map.Entry entry : appGroupMap.entrySet()) {
+        for (Map.Entry entry : candidateClusterMap.entrySet()) {
             Set<String> cluster = (Set) entry.getValue();
             int tacId = (Integer) entry.getKey();
             String sql = sqlGenerateForApp(cluster);

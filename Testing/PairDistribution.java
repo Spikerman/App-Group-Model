@@ -15,7 +15,7 @@ import java.util.*;
 /**
  * Created by chenhao on 5/3/16.
  */
-public class RankingSimilarityPair {
+public class PairDistribution {
     public int count = 0;
     public Set<Set<String>> groupSet = new HashSet<>();
     public Map<Integer, Integer> rankDt = new TreeMap<>();
@@ -31,7 +31,7 @@ public class RankingSimilarityPair {
     private DataController dataController;
     private int adjustDayDiff = 3;
 
-    public RankingSimilarityPair() {
+    public PairDistribution() {
         dataController = new DataController();
 
         //ranking 必须第一个构造,创建rankAppPool
@@ -41,11 +41,11 @@ public class RankingSimilarityPair {
     }
 
     public static void main(String args[]) {
-        RankingSimilarityPair rankingSimilarityPair = new RankingSimilarityPair();
-        rankingSimilarityPair.getRecordMaps();
-        rankingSimilarityPair.startCalculate();
+        PairDistribution pairDistribution = new PairDistribution();
+        pairDistribution.getRecordMaps();
+        pairDistribution.startCalculate();
 
-        rankingSimilarityPair.exportGroupData();
+        pairDistribution.exportGroupData();
 
     }
 
@@ -60,7 +60,7 @@ public class RankingSimilarityPair {
         Object[] innerArray = rankRecordMap.entrySet().toArray();
 
         for (int i = 0; i < outerArray.length; i++) {
-            for (int j = 0; j < innerArray.length; j++) {
+            for (int j = i + 1; j < innerArray.length; j++) {
                 Map.Entry outerEntry = (Map.Entry) outerArray[i];
                 Map.Entry innerEntry = (Map.Entry) innerArray[j];
                 pairwiseDistribution(outerEntry, innerEntry);
@@ -89,13 +89,17 @@ public class RankingSimilarityPair {
         HashMap<Date, RateAmountDiffRecord> outerVolumeMap = (HashMap) rateVolumeRecordMap.get(outerId);
         HashMap<Date, RateAmountDiffRecord> innerVolumeMap = (HashMap) rateVolumeRecordMap.get(innerId);
 
+        Set<Date> commonDate = new HashSet<>();
+
         //rank
         for (int i = 0; i < outerList.size(); i++) {
             for (int j = 0; j < innerList.size(); j++) {
                 AppData appA = outerList.get(i);
                 AppData appB = innerList.get(j);
-                if (appA.rankType.equals(appB.rankType) && appA.date.equals(appB.date))
+                if ((appA.rankType.equals(appB.rankType) && appA.date.equals(appB.date)) && !commonDate.contains(appA.date)) {
                     rankCount++;
+                    commonDate.add(appA.date);
+                }
             }
         }
 
@@ -108,7 +112,7 @@ public class RankingSimilarityPair {
             Double outerRateDiff = outerRatingMap.get(date);
             Double innerRateDiff = innerRatingMap.get(date);
             //相同日起时,两个APP的变化趋势相同
-            if (outerRateDiff * innerRateDiff > 0) {
+            if ((outerRateDiff > 0) && (innerRateDiff > 0)) {
                 ratingCount++;
                 commonDateSet.add(date);
             } else {
@@ -125,7 +129,9 @@ public class RankingSimilarityPair {
         for (Date date : shareDateSetV) {
             RateAmountDiffRecord outerDiffRecord = outerVolumeMap.get(date);
             RateAmountDiffRecord innerDiffRecord = innerVolumeMap.get(date);
-            if (((outerDiffRecord.amountDiff/outerAppAvgDiffNum>1.3) && (innerDiffRecord.amountDiff/innerAppAvgDiffNum>1.3)))
+            double outer = (double) outerDiffRecord.amountDiff / (double) outerAppAvgDiffNum;
+            double inner = (double) innerDiffRecord.amountDiff / (double) innerAppAvgDiffNum;
+            if (outer > 1.3 && inner > 1.3)
                 volumeCount++;
         }
 
@@ -178,25 +184,25 @@ public class RankingSimilarityPair {
         System.out.println("Start to export...");
 
 
-        for(int i=0;i<31;i++){
-            if(rankDt.containsKey(i)){
-                int y=rankDt.get(i);
-                dataController.insertDistribution(i,y,"rank");
-            }else{
-                dataController.insertDistribution(i,0,"rank");
+        for (int i = 0; i < 31; i++) {
+            if (rankDt.containsKey(i)) {
+                int y = rankDt.get(i);
+                dataController.insertDistribution(i, y, "rank");
+            } else {
+                dataController.insertDistribution(i, 0, "rank");
             }
-            if(ratingDt.containsKey(i)){
-                int y=ratingDt.get(i);
-                dataController.insertDistribution(i,y,"rating");
-            }else{
-                dataController.insertDistribution(i,0,"rating");
+            if (ratingDt.containsKey(i)) {
+                int y = ratingDt.get(i);
+                dataController.insertDistribution(i, y, "rating");
+            } else {
+                dataController.insertDistribution(i, 0, "rating");
             }
 
-            if(volumeDt.containsKey(i)){
-                int y=volumeDt.get(i);
-                dataController.insertDistribution(i,y,"volume");
-            }else{
-                dataController.insertDistribution(i,0,"volume");
+            if (volumeDt.containsKey(i)) {
+                int y = volumeDt.get(i);
+                dataController.insertDistribution(i, y, "volume");
+            } else {
+                dataController.insertDistribution(i, 0, "volume");
             }
 
         }

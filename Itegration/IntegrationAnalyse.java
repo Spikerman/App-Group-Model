@@ -15,6 +15,8 @@ import java.util.Set;
 /**
  * Created by chenhao on 4/5/16.
  */
+
+// old method unused
 public class IntegrationAnalyse {
     public Set<Set<String>> groupSet = new HashSet<>();
     private RankingAnalysis rankingAnalysis;
@@ -32,6 +34,7 @@ public class IntegrationAnalyse {
         rateAmountAnalysis = new RateAmountAnalysis(dataController);
         ratingAnalysis = new RatingAnalysis(dataController);
     }
+
 
     public static void main(String args[]) {
         IntegrationAnalyse integrationAnalyse = new IntegrationAnalyse();

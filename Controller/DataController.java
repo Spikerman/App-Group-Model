@@ -13,12 +13,10 @@ import java.util.*;
  */
 public class DataController {
 
-    public int RANK_MIN_NUM = 16;
+    public int RANK_MIN_NUM = 12;
     public int RATE_NUM_MIN_NUM = 4;
     public int RATING_MIN_NUM = 3;
-
-    public int FREQUENCY = 18;
-
+    public int FREQUENCY = 14;
     private DbController dbController = new DbController();
     private RemoteDbController remoteDbController = new RemoteDbController();
     private List<AppData> appDataRecordListForRank = new LinkedList<>();
@@ -40,9 +38,7 @@ public class DataController {
         dbController.setInsertRateNumTestStmt(DbController.insertTestSql);
         dbController.setInsertRateNumTestStmt(DbController.insertRankAppSql);
         remoteDbController.setInsertAppGroupStmt(remoteDbController.insertAppGroupSql);
-
         remoteDbController.setInsertCCStmt(remoteDbController.insertCandidateClusterSql);
-
         dbController.setInsertAppGroupStmt(remoteDbController.insertAppGroupSql);
         dbController.setInsertRankAppStmt(DbController.insertRankAppSql);
         dbController.setInsertDistributionStmt(DbController.insertDistributionSql);
@@ -376,8 +372,15 @@ public class DataController {
         Iterator iterator = appMapForRank.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry entry = (Map.Entry) iterator.next();
-            List appDataList = (List) entry.getValue();
-            if (appDataList.size() >= minimum)
+            List<AppData> appDataList = (List) entry.getValue();
+
+            Set<Date> dateSet = new HashSet<>();
+
+            for (AppData appData : appDataList) {
+                dateSet.add(appData.date);
+            }
+
+            if (dateSet.size() >= minimum)
                 total++;
         }
 

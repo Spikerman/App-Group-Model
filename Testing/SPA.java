@@ -11,14 +11,13 @@ public class SPA {
         dataController.getRankAppInfoFromDb();
         dataController.constructRankAppMap();
 
-        System.out.println(dataController.avgURF());
 
 
-//        int i=1;
-//        while(i<60){
-//            dataController.countValidAppAmount(i);
-//            i++;
-//        }
+        int i=1;
+        while(i<60){
+            dataController.countValidAppAmount(i);
+            i++;
+        }
 
     }
 
