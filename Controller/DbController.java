@@ -17,6 +17,7 @@ public class DbController {
     public static final String insertAppGroupSql = "insert into Data.AppGroup (groupId,appId) values (?,?)";
     public static final String insertRankAppSql = "insert into Data.RankApp (rankMinNum,validAppAmount) values (?,?)";
     public static final String insertDistributionSql = "insert into Data.Distribution (Sim,Amount,Type) values (?,?,?)";
+    public static final String insertAppPairSQL = "insert into Data.AppPair (appA,appB,support,label) values (?,?,?,?)";
 
     public Connection connection = null;
     public PreparedStatement rankNumQueryStmt = null;
@@ -24,7 +25,7 @@ public class DbController {
     public PreparedStatement insertAppGroupStmt = null;
     public PreparedStatement insertAppRankStmt = null;
     public PreparedStatement insertDistributionStmt = null;
-
+    public PreparedStatement insertAppPairStmt;
 
     public DbController() {
         try {
@@ -38,8 +39,15 @@ public class DbController {
     }
 
     public static void main(String args[]) {
-
         DbController dbController = new DbController();
+    }
+
+    public void setInsertAppPairStmt(String sql) {
+        try {
+            insertAppPairStmt = connection.prepareStatement(sql);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void setRankNumQueryStmt(String sql) {
@@ -74,7 +82,7 @@ public class DbController {
         }
     }
 
-    public void setInsertDistributionStmt(String sql){
+    public void setInsertDistributionStmt(String sql) {
         try {
             insertDistributionStmt = connection.prepareStatement(sql);
         } catch (Exception e) {

@@ -64,17 +64,17 @@ public class AppCluster {
         return commonChangeDateSet.size();
     }
 
-    public void print(){
+    public void print() {
         System.out.println("----------------------------------");
         System.out.print("app id:");
-        for (String s:
-             appIdSet) {
-            System.out.print("\t"+s);
+        for (String s :
+                appIdSet) {
+            System.out.print("\t" + s);
         }
         System.out.print("\nDates:");
-        for (Date date:
+        for (Date date :
                 commonChangeDateSet) {
-            System.out.print("\t"+date);
+            System.out.print("\t" + date);
         }
         System.out.println();
     }

@@ -42,6 +42,7 @@ public class DataController {
         dbController.setInsertAppGroupStmt(remoteDbController.insertAppGroupSql);
         dbController.setInsertRankAppStmt(DbController.insertRankAppSql);
         dbController.setInsertDistributionStmt(DbController.insertDistributionSql);
+        dbController.setInsertAppPairStmt(DbController.insertAppPairSQL);
     }
 
     public DataController(String x) {
@@ -186,6 +187,19 @@ public class DataController {
             remoteDbController.insertCCStmt.setString(2, appId);
             remoteDbController.insertCCStmt.executeUpdate();
         } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void exportAppPairToDb(String appA, String appB, String label) {
+        try {
+            dbController.insertAppPairStmt.setString(1, appA);
+            dbController.insertAppPairStmt.setString(2, appB);
+            dbController.insertAppPairStmt.setInt(3, -1);
+            dbController.insertAppPairStmt.setString(4, label);
+            dbController.insertAppPairStmt.executeUpdate();
+            System.out.println(appA + "  " + appB + "  " + label);
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }

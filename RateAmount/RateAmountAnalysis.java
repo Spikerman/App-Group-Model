@@ -89,12 +89,10 @@ public class RateAmountAnalysis {
         for (int current = 0, next = 1; next < list.size() && current < list.size(); next++, current++) {
             RateAmountDiffRecord record = new RateAmountDiffRecord();
             record.amountDiff = list.get(next).userTotalRateCount - list.get(current).userTotalRateCount;
-
             //若评论数量呈正增长区属,则计入增长总数中
             //对于评论数量下降的异常情况,考虑苹果删除评论的可能性,则不从已有的累计数量中扣除
             if (record.amountDiff > 0)
                 totalDiffAmount += record.amountDiff;
-
             //若评论数为负增长,对相应app的metadata值标记
             if (record.amountDiff < 0) {
                 recordRateNumDecrease(appId);
@@ -103,9 +101,7 @@ public class RateAmountAnalysis {
             record.appId = appId;
             diffMap.put(record.date, record);
         }
-
         double avgNum = (double) totalDiffAmount / (double) list.size();
-
         appMetaDataMap.get(appId).averageDailyRateNum = avgNum;
         return diffMap;
     }

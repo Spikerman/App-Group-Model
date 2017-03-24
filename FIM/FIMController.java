@@ -63,7 +63,7 @@ public class FimController {
         DbController dbController = new DbController();
         FimController fimController = new FimController(dbController);
         fimController.loadUserGroup();
-        fimController.loadCCMapFromDb();
+        fimController.loadClusterMapFromLocalDb();
         fimController.countClusterReviewAmount();
         fimController.buildTestAppGroupMap();
         //fimController.buildAppReviewerMap(2);
@@ -222,7 +222,7 @@ public class FimController {
     }
 
     //构造app group map, key为对应的组, value为组内的app数
-    public void loadCCMapFromDb() {
+    public void loadClusterMapFromLocalDb() {
         Statement statement;
         ResultSet rs;
         try {

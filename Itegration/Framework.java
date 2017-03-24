@@ -1,7 +1,6 @@
 package Itegration;
 
 import Controller.DataController;
-import Controller.DbController;
 import DataModel.AppCluster;
 import DataModel.AppData;
 import DataModel.RateAmountDiffRecord;
@@ -72,12 +71,12 @@ public class Framework {
 
 
         //以下为本地数据库与远程数据库中 app cluster 数据的数据比较部分
-        DbController db = new DbController();
-        FimController fimController = new FimController(db);
-        fimController.loadClusterMapFromLocalDb();
-        framework.duplicateCount(totalApps, fimController, candidateLimitSize);
-        framework.buildAppClusterSet(candidateLimitSize);
-        framework.exportToRemoteDb();//导出各个 app cluster 到远程数据库
+//        DbController db = new DbController();
+//        FimController fimController = new FimController(db);
+//        fimController.loadClusterMapFromLocalDb();
+//        framework.duplicateCount(totalApps, fimController, candidateLimitSize);
+//        framework.buildAppClusterSet(candidateLimitSize);
+//        framework.exportToRemoteDb();//导出各个 app cluster 到远程数据库
     }
 
     private void getRecordMaps() {
@@ -206,6 +205,7 @@ public class Framework {
         // if ((rankFlag && ratingFlag) || (volumeFlag && rankFlag) || (volumeFlag && ratingFlag)) {
         if (rankFlag || ratingFlag || volumeFlag) {
             collusivePairCount++;
+            //dataController.exportAppPairToDb(innerId, outerId, "collusive");
             if (AppClusterMap.containsKey(outerId)) {
                 AppCluster appCluster = AppClusterMap.get(outerId);
                 appCluster.getAppIdSet().add(innerId);
@@ -215,7 +215,8 @@ public class Framework {
                 newGroup.getAppIdSet().add(innerId);
                 AppClusterMap.put(outerId, newGroup);
             }
-
+        } else {
+            //dataController.exportAppPairToDb(innerId, outerId, "normal");
         }
 
     }
@@ -230,7 +231,6 @@ public class Framework {
             for (int j = i + 1; j < innerIdSet.length; j++) {
                 String outerId = outerIdSet[i].toString();
                 String innerId = innerIdSet[j].toString();
-
                 Set<String> outerSet;
                 Set<String> innerSet;
                 if (AppClusterMap.containsKey(outerId) && AppClusterMap.containsKey(innerId)) {
@@ -276,10 +276,8 @@ public class Framework {
     private boolean enableCombine(Set<String> setA, Set<String> setB, double rate) {
         Set<String> unionSet = Sets.union(setA, setB);
         Set<String> intersectionSet = Sets.intersection(setA, setB);
-
         double unionSize = unionSet.size();
         double intersectionSize = intersectionSet.size();
-
         return (intersectionSize / unionSize) >= rate;
     }
 
