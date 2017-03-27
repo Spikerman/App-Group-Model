@@ -76,7 +76,7 @@ public class Framework {
 //        fimController.loadClusterMapFromLocalDb();
 //        framework.duplicateCount(totalApps, fimController, candidateLimitSize);
 //        framework.buildAppClusterSet(candidateLimitSize);
-//        framework.exportToRemoteDb();//导出各个 app cluster 到远程数据库
+        //framework.exportToRemoteDb();//导出各个 app cluster 到远程数据库
     }
 
     private void getRecordMaps() {
@@ -305,7 +305,7 @@ public class Framework {
         Iterator appIdIterator;
         int clusterId = 1;
         while (clusterIterator.hasNext()) {
-            Set<String> idSet = (Set<String>) clusterIterator.next();
+            Set idSet = (Set) clusterIterator.next();
             appIdIterator = idSet.iterator();
             while (appIdIterator.hasNext()) {
                 String appId = (String) appIdIterator.next();
