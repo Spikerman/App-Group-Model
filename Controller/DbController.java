@@ -10,8 +10,8 @@ import java.sql.PreparedStatement;
 public class DbController {
     public static final String url = "jdbc:mysql://127.0.0.1/Data";
     public static final String name = "com.mysql.jdbc.Driver";
-    public static final String user = "root";
-    public static final String password = "root";
+    public static final String user = "";
+    public static final String password = "";
     public static final String rankQuerySql = "select appId,rankType,currentVersion,currentVersionReleaseDate,userRatingCountForCurrentVersion,userRatingCount,date from Data.AppInfo where rankType='update' and appId=? order by date";
     public static final String insertTestSql = "insert into Data.RateNumTest (date,appA,appB,appC,avgA,avgB,avgC) values (?,?,?,?,?,?,?)";
     public static final String insertAppGroupSql = "insert into Data.AppGroup (groupId,appId) values (?,?)";
