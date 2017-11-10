@@ -351,9 +351,7 @@ public class DataController {
                 appMapForRank.put(appData.appId, newList);
             }
         }
-
         System.out.println("数据库App总数 : " + appMapForRank.size());
-
         Iterator iterator = appMapForRank.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry entry = (Map.Entry) iterator.next();
